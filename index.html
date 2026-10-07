@@ -576,7 +576,7 @@ footer {
     class="song-status"
     id="songStatus">
 
-    Loading...
+    Loading from rmLv...
 
 </div>
 
@@ -1177,8 +1177,12 @@ d="M8 7h4.8c2.4 0 3.8 1.2 3.8 3 0 1.1-.6 2-1.6 2.5 1.3.4 2.1 1.4 2.1 2.8 0 2-1.5
 const CHANNEL_ID =
     "UCm8VZmOJXH7ap_dIaaCAnaQ";
 
-const FALLBACK_VIDEO_ID =
-    "VJncR7t_OT4";
+/*
+    IMPORTANT:
+    No old xlRVlx fallback video is used anymore.
+    If the RSS feed fails, the page will show
+    an error message instead of playing an old song.
+*/
 
 const RSS_URL =
     "https://www.youtube.com/feeds/videos.xml?channel_id="
@@ -1355,12 +1359,12 @@ function displaySong(
     if (index === 0) {
 
         songStatus.textContent =
-            `Latest: "${song.title}"`;
+            `Latest from rmLv`;
 
     } else {
 
         songStatus.textContent =
-            `Now playing "${song.title}" from rmLv`;
+            `Now playing from rmLv`;
     }
 
 
@@ -1536,7 +1540,7 @@ async function loadLatestYouTubeUpload() {
         ) {
 
             throw new Error(
-                "No YouTube uploads found."
+                "No rmLv YouTube uploads found."
             );
         }
 
@@ -1572,10 +1576,14 @@ async function loadLatestYouTubeUpload() {
         if (!songs.length) {
 
             throw new Error(
-                "Could not extract video IDs."
+                "Could not extract YouTube video IDs."
             );
         }
 
+
+        /*
+            RSS returns the newest upload first.
+        */
 
         currentSongIndex = 0;
 
@@ -1589,36 +1597,32 @@ async function loadLatestYouTubeUpload() {
     } catch (error) {
 
         console.error(
-            "YouTube RSS error:",
+            "rmLv YouTube RSS error:",
             error
         );
 
 
-        songs = [
+        /*
+            IMPORTANT:
+            We do NOT load an old xlRVlx video here.
 
-            {
+            If the RSS feed cannot be loaded,
+            show an error instead.
+        */
 
-                id:
-                    FALLBACK_VIDEO_ID,
-
-                title:
-                    "rmLv",
-
-                link:
-                    `https://www.youtube.com/watch?v=${FALLBACK_VIDEO_ID}`
-            }
-
-        ];
-
+        songs = [];
 
         currentSongIndex = 0;
 
+        songTitle.textContent =
+            "Unable to load latest upload";
 
-        displaySong(
-            currentSongIndex,
-            false
-        );
+        songStatus.textContent =
+            "Please refresh the page";
 
+        previousButton.disabled = true;
+
+        nextButton.disabled = true;
     }
 }
 

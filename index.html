@@ -917,7 +917,7 @@ d="M18.8 12.7c0-2.4 2-3.6 2.1-3.7-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.1-2.7.8-3.4.8-.7 
 
 <a
 class="card"
-href="https://xlrvlx31.bandcamp.com/?ui_context=usernav"
+href="https://rmlv.bandcamp.com/?ui_context=usernav"
 target="_blank"
 rel="noopener">
 
@@ -1046,7 +1046,7 @@ rel="noopener">
 
 <a
 class="card"
-href="https://ph.pinterest.com/dummz421/"
+href="https://ph.pinterest.com/rmlv31/"
 target="_blank"
 rel="noopener">
 
@@ -1552,41 +1552,24 @@ async function loadLatestYouTubeUpload() {
                     const videoId =
                         extractVideoId(item);
 
-                    const title =
-                        item.title ||
-                        "rmLv Upload";
-
-                    const link =
-                        item.link ||
-                        `https://www.youtube.com/watch?v=${videoId}`;
-
-                    const description =
-                        item.description ||
-                        item.content ||
-                        "";
-
-                    /*
-                        Exclude Shorts when YouTube/RSS metadata
-                        identifies them by URL or #shorts hashtag.
-                        Regular long-form uploads remain eligible.
-                    */
-                    const isShort =
-                        /youtube\.com\/shorts\//i.test(link) ||
-                        /youtu\.be\/shorts\//i.test(link) ||
-                        /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(
-                            `${title} ${description}`
-                        );
 
                     return {
-                        id: videoId,
-                        title: title,
-                        link: link,
-                        isShort: isShort
+
+                        id:
+                            videoId,
+
+                        title:
+                            item.title ||
+                            "rmLv Upload",
+
+                        link:
+                            item.link ||
+                            `https://www.youtube.com/watch?v=${videoId}`
                     };
 
                 })
                 .filter(
-                    song => song.id && !song.isShort
+                    song => song.id
                 );
 
 

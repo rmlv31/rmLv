@@ -1552,24 +1552,41 @@ async function loadLatestYouTubeUpload() {
                     const videoId =
                         extractVideoId(item);
 
+                    const title =
+                        item.title ||
+                        "rmLv Upload";
+
+                    const link =
+                        item.link ||
+                        `https://www.youtube.com/watch?v=${videoId}`;
+
+                    const description =
+                        item.description ||
+                        item.content ||
+                        "";
+
+                    /*
+                        Exclude Shorts when YouTube/RSS metadata
+                        identifies them by URL or #shorts hashtag.
+                        Regular long-form uploads remain eligible.
+                    */
+                    const isShort =
+                        /youtube\.com\/shorts\//i.test(link) ||
+                        /youtu\.be\/shorts\//i.test(link) ||
+                        /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(
+                            `${title} ${description}`
+                        );
 
                     return {
-
-                        id:
-                            videoId,
-
-                        title:
-                            item.title ||
-                            "rmLv Upload",
-
-                        link:
-                            item.link ||
-                            `https://www.youtube.com/watch?v=${videoId}`
+                        id: videoId,
+                        title: title,
+                        link: link,
+                        isShort: isShort
                     };
 
                 })
                 .filter(
-                    song => song.id
+                    song => song.id && !song.isShort
                 );
 
 

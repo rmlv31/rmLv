@@ -1558,24 +1558,33 @@ async function loadLatestYouTubeUpload() {
             throw new Error("Could not find the channel uploads playlist.");
         }
 
-        // Read recent uploads, newest first.
-        const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-        playlistUrl.search = new URLSearchParams({
-            part: "snippet,contentDetails",
-            playlistId: uploadsPlaylistId,
-            maxResults: "50",
-            key: YOUTUBE_API_KEY
-        }).toString();
+        // Read up to 500 recent uploads, newest first. Pagination matters because
+        // the newest uploads may be Shorts and we still need to find long-form videos.
+        const playlistItems = [];
+        let pageToken = "";
+        do {
+            const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+            const playlistParams = {
+                part: "snippet,contentDetails",
+                playlistId: uploadsPlaylistId,
+                maxResults: "50",
+                key: YOUTUBE_API_KEY
+            };
+            if (pageToken) playlistParams.pageToken = pageToken;
+            playlistUrl.search = new URLSearchParams(playlistParams).toString();
 
-        const playlistData = await apiRequest(playlistUrl.toString());
-        const playlistItems = (playlistData.items || [])
-            .map(item => ({
-                id: item.contentDetails?.videoId || item.snippet?.resourceId?.videoId,
-                title: item.snippet?.title || "rmLv Upload",
-                description: item.snippet?.description || "",
-                publishedAt: item.contentDetails?.videoPublishedAt || item.snippet?.publishedAt || ""
-            }))
-            .filter(item => item.id);
+            const playlistData = await apiRequest(playlistUrl.toString());
+            playlistItems.push(...(playlistData.items || [])
+                .map(item => ({
+                    id: item.contentDetails?.videoId || item.snippet?.resourceId?.videoId,
+                    title: item.snippet?.title || "rmLv Upload",
+                    description: item.snippet?.description || "",
+                    publishedAt: item.contentDetails?.videoPublishedAt || item.snippet?.publishedAt || ""
+                }))
+                .filter(item => item.id));
+
+            pageToken = playlistData.nextPageToken || "";
+        } while (pageToken && playlistItems.length < 500);
 
         if (!playlistItems.length) {
             throw new Error("No public uploads were returned for the channel.");
@@ -1613,23 +1622,28 @@ async function loadLatestYouTubeUpload() {
 
         songs = playlistItems
             .map(item => {
-                const details = videoDetails.get(item.id) || {};
+                const details = videoDetails.get(item.id);
+                // If YouTube returns no duration/details, do NOT show the video.
+                // This prevents Shorts or unavailable items slipping into the player.
+                if (!details || !details.duration) return null;
+
                 const title = details.title || item.title;
-                const description = details.description || item.description;
                 const duration = durationInSeconds(details.duration);
-                // Keep only long-form videos. YouTube Shorts are up to 3 minutes;
-                // videos at or below 180 seconds are excluded from this player.
-                const isShort = duration > 0 && duration <= 180;
+                const titleLooksLikeShort = /#shorts|\/shorts\//i.test(title + " " + item.description);
+
+                // Only include videos strictly longer than 180 seconds.
+                // Filtering happens before display, so Shorts never appear in the player.
+                if (duration <= 180 || titleLooksLikeShort) return null;
+                if (details.privacyStatus && details.privacyStatus !== "public") return null;
 
                 return {
                     id: item.id,
                     title,
                     link: `https://www.youtube.com/watch?v=${item.id}`,
-                    publishedAt: item.publishedAt,
-                    isShort
+                    publishedAt: item.publishedAt
                 };
             })
-            .filter(song => song.id && !song.isShort);
+            .filter(Boolean);
 
         if (!songs.length) {
             throw new Error("No public long-form uploads were found in the recent uploads.");

@@ -1166,487 +1166,613 @@ d="M8 7h4.8c2.4 0 3.8 1.2 3.8 3 0 1.1-.6 2-1.6 2.5 1.3.4 2.1 1.4 2.1 2.8 0 2-1.5
      YOUTUBE IFRAME API
 ========================= -->
 
+<!-- Off-screen player used only to read video durations without displaying Shorts. -->
+<div id="youtubeProbe" aria-hidden="true" style="position:fixed;left:-10000px;top:0;width:320px;height:180px;opacity:0;pointer-events:none;"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-
 /* ==========================================
+
    YOUTUBE SETTINGS
+
 ========================================== */
 
-const CHANNEL_ID =
-    "UCm8VZmOJXH7ap_dIaaCAnaQ";
+const CHANNEL_ID = "UCm8VZmOJXH7ap_dIaaCAnaQ";
 
-/*
-    IMPORTANT:
-    No old xlRVlx fallback video is used anymore.
-    If the RSS feed fails, the page will show
-    an error message instead of playing an old song.
-*/
+const RSS_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=" + CHANNEL_ID;
 
-const RSS_URL =
-    "https://www.youtube.com/feeds/videos.xml?channel_id="
-    + CHANNEL_ID;
+const API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(RSS_URL);
 
-const API_URL =
-    "https://api.rss2json.com/v1/api.json?rss_url="
-    + encodeURIComponent(RSS_URL);
+const MIN_LONGFORM_SECONDS = 180; // Only show videos longer than 3 minutes.
 
 
 /* ==========================================
+
    PLAYER VARIABLES
+
 ========================================== */
 
 let songs = [];
+
+let candidateSongs = [];
 
 let currentSongIndex = 0;
 
 let youtubePlayer = null;
 
+let probePlayer = null;
+
 let youtubeAPIReady = false;
 
-let pendingVideoId = null;
+let rssLoaded = false;
+
+let scanStarted = false;
+
+let probeIndex = 0;
+
+let probeCurrentId = null;
+
+let probeRetryCount = 0;
+
+let probeCheckPending = false;
+let probeCheckRunning = false;
+
+
+const songTitle = document.getElementById("songTitle");
+
+const songStatus = document.getElementById("songStatus");
+
+const previousButton = document.getElementById("previousButton");
+
+const nextButton = document.getElementById("nextButton");
 
 
 /* ==========================================
-   HTML ELEMENTS
-========================================== */
 
-const songTitle =
-    document.getElementById("songTitle");
-
-const songStatus =
-    document.getElementById("songStatus");
-
-const previousButton =
-    document.getElementById("previousButton");
-
-const nextButton =
-    document.getElementById("nextButton");
-
-
-/* ==========================================
    YOUTUBE API READY
+
 ========================================== */
 
 function onYouTubeIframeAPIReady() {
 
     youtubeAPIReady = true;
 
-    if (pendingVideoId) {
+    startDurationScan();
 
-        createYouTubePlayer(
-            pendingVideoId,
-            false
-        );
-
-        pendingVideoId = null;
-    }
 }
 
 
 /* ==========================================
-   CREATE YOUTUBE PLAYER
-========================================== */
 
-function createYouTubePlayer(
-    videoId,
-    autoplay = false
-) {
+   VIDEO ID EXTRACTION
 
-    if (!videoId) {
-        return;
-    }
-
-    if (!youtubeAPIReady) {
-
-        pendingVideoId = videoId;
-
-        return;
-    }
-
-
-    if (youtubePlayer) {
-
-        youtubePlayer.loadVideoById(
-            videoId
-        );
-
-        if (!autoplay) {
-
-            youtubePlayer.pauseVideo();
-        }
-
-        return;
-    }
-
-
-    youtubePlayer =
-        new YT.Player(
-            "youtubePlayer",
-            {
-
-                videoId: videoId,
-
-                playerVars: {
-
-                    autoplay:
-                        autoplay ? 1 : 0,
-
-                    rel: 0,
-
-                    modestbranding: 1
-                },
-
-                events: {
-
-                    onStateChange:
-                        onPlayerStateChange
-                }
-            }
-        );
-}
-
-
-/* ==========================================
-   PLAYER STATE
-========================================== */
-
-function onPlayerStateChange(event) {
-
-    if (
-        event.data ===
-        YT.PlayerState.ENDED
-    ) {
-
-        playNextAutomatically();
-    }
-}
-
-
-/* ==========================================
-   DISPLAY SONG
-========================================== */
-
-function displaySong(
-    index,
-    autoplay = false
-) {
-
-    if (
-        !songs.length ||
-        !songs[index]
-    ) {
-
-        return;
-    }
-
-
-    const song =
-        songs[index];
-
-
-    createYouTubePlayer(
-        song.id,
-        autoplay
-    );
-
-
-    songTitle.textContent =
-        song.title;
-
-
-    if (index === 0) {
-
-        songStatus.textContent =
-            `Latest from rmLv`;
-
-    } else {
-
-        songStatus.textContent =
-            `Now playing from rmLv`;
-    }
-
-
-    updateButtons();
-}
-
-
-/* ==========================================
-   UPDATE BUTTONS
-========================================== */
-
-function updateButtons() {
-
-    previousButton.disabled =
-        currentSongIndex <= 0;
-
-    nextButton.disabled =
-        currentSongIndex >=
-        songs.length - 1;
-}
-
-
-/* ==========================================
-   MANUAL NEXT
-========================================== */
-
-function showNextSong() {
-
-    if (
-        currentSongIndex <
-        songs.length - 1
-    ) {
-
-        currentSongIndex++;
-
-        displaySong(
-            currentSongIndex,
-            true
-        );
-    }
-}
-
-
-/* ==========================================
-   AUTOMATIC NEXT
-========================================== */
-
-function playNextAutomatically() {
-
-    if (
-        currentSongIndex <
-        songs.length - 1
-    ) {
-
-        currentSongIndex++;
-
-        displaySong(
-            currentSongIndex,
-            true
-        );
-
-    } else {
-
-        songStatus.textContent =
-            "End of rmLv uploads";
-
-        updateButtons();
-    }
-}
-
-
-/* ==========================================
-   MANUAL PREVIOUS
-========================================== */
-
-function showPreviousSong() {
-
-    if (
-        currentSongIndex > 0
-    ) {
-
-        currentSongIndex--;
-
-        displaySong(
-            currentSongIndex,
-            true
-        );
-    }
-}
-
-
-/* ==========================================
-   EXTRACT YOUTUBE VIDEO ID
 ========================================== */
 
 function extractVideoId(item) {
 
-    let videoId = "";
-
-
     if (item.guid) {
 
-        const guidMatch =
-            item.guid.match(
-                /video:([a-zA-Z0-9_-]+)/
-            );
+        const m = String(item.guid).match(/video:([a-zA-Z0-9_-]+)/);
 
+        if (m) return m[1];
 
-        if (guidMatch) {
-
-            videoId =
-                guidMatch[1];
-        }
     }
 
+    const text = String(item.link || item.guid || "");
 
-    if (
-        !videoId &&
-        item.link
-    ) {
+    let m = text.match(/[?&]v=([a-zA-Z0-9_-]+)/);
 
-        const linkMatch =
-            item.link.match(
-                /[?&]v=([a-zA-Z0-9_-]+)/
-            );
+    if (m) return m[1];
 
+    m = text.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
 
-        if (linkMatch) {
+    if (m) return m[1];
 
-            videoId =
-                linkMatch[1];
-        }
-    }
+    m = text.match(/youtube\.com\/(?:shorts|embed)\/([a-zA-Z0-9_-]+)/i);
 
+    return m ? m[1] : "";
 
-    return videoId;
 }
 
 
+
 /* ==========================================
-   CHECK DURATION WITHOUT A DATA API KEY
+
+   FEED PROVIDERS
+
+   Try RSS2JSON first, then a public RSS proxy
+
+   if the first service is unavailable.
+
 ========================================== */
 
-let durationProbePlayer = null;
-let durationProbeReady = false;
-let durationProbePending = null;
-let durationProbeTimer = null;
+async function fetchUploadItems() {
 
-function ensureDurationProbe() {
-    if (durationProbePlayer || !youtubeAPIReady) return;
+    // Provider 1: RSS2JSON
 
-    let probeHost = document.getElementById("rmLvDurationProbe");
-    if (!probeHost) {
-        probeHost = document.createElement("div");
-        probeHost.id = "rmLvDurationProbe";
-        probeHost.setAttribute("aria-hidden", "true");
-        probeHost.style.cssText = "position:fixed;left:-10000px;top:0;width:200px;height:200px;overflow:hidden;pointer-events:none;";
-        document.body.appendChild(probeHost);
+    try {
+
+        const response = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
+
+        if (response.ok) {
+
+            const data = await response.json();
+
+            if (data.status === "ok" && Array.isArray(data.items) && data.items.length) {
+
+                return data.items;
+
+            }
+
+            console.warn("RSS2JSON did not return uploads:", data.message || data.status);
+
+        } else {
+
+            console.warn("RSS2JSON HTTP error:", response.status);
+
+        }
+
+    } catch (error) {
+
+        console.warn("RSS2JSON unavailable; trying fallback:", error);
+
     }
 
-    durationProbePlayer = new YT.Player("rmLvDurationProbe", {
-        width: "200",
-        height: "200",
-        playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
-        events: {
-            onReady: function () { durationProbeReady = true; },
-            onStateChange: function (event) {
-                if (event.data === YT.PlayerState.CUED && durationProbePending) {
-                    const pending = durationProbePending;
-                    durationProbePending = null;
-                    clearTimeout(durationProbeTimer);
-                    let duration = 0;
-                    try { duration = Number(durationProbePlayer.getDuration()) || 0; } catch (_) {}
-                    pending(duration);
-                }
-            },
-            onError: function () {
-                if (durationProbePending) {
-                    const pending = durationProbePending;
-                    durationProbePending = null;
-                    clearTimeout(durationProbeTimer);
-                    pending(0);
-                }
-            }
-        }
-    });
+
+    // Provider 2: retrieve the same public YouTube RSS XML through AllOrigins.
+
+    const fallbackURL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(RSS_URL) + "&t=" + Date.now();
+
+    const fallbackResponse = await fetch(fallbackURL, { cache: "no-store" });
+
+    if (!fallbackResponse.ok) throw new Error("RSS fallback returned HTTP " + fallbackResponse.status);
+
+    const xmlText = await fallbackResponse.text();
+
+    const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+
+    if (xml.querySelector("parsererror")) throw new Error("Could not parse YouTube RSS XML");
+
+
+    return Array.from(xml.getElementsByTagName("entry")).map(entry => {
+
+        const getText = (localName) => {
+
+            const node = entry.getElementsByTagNameNS("*", localName)[0];
+
+            return node ? node.textContent.trim() : "";
+
+        };
+
+        const videoId = getText("videoId");
+
+        const title = getText("title");
+
+        const description = getText("description");
+
+        const linkNode = entry.querySelector("link[rel='alternate']") || entry.getElementsByTagName("link")[0];
+
+        return {
+
+            guid: videoId ? "yt:video:" + videoId : "",
+
+            title,
+
+            description,
+
+            link: linkNode ? (linkNode.getAttribute("href") || "") : ""
+
+        };
+
+    }).filter(item => item.guid);
+
 }
 
-function getVideoDurationWithoutKey(videoId) {
-    return new Promise(resolve => {
-        ensureDurationProbe();
-        const startedAt = Date.now();
-        const waitUntilReady = () => {
-            if (!durationProbePlayer || !durationProbeReady) {
-                if (Date.now() - startedAt > 8000) return resolve(0);
-                return setTimeout(waitUntilReady, 100);
-            }
-            if (durationProbePending) {
-                // A previous probe is still pending; don't overlap requests.
-                return setTimeout(waitUntilReady, 100);
-            }
-            durationProbePending = resolve;
-            durationProbeTimer = setTimeout(() => {
-                if (durationProbePending === resolve) durationProbePending = null;
-                resolve(0);
-            }, 5000);
-            try {
-                durationProbePlayer.cueVideoById(videoId);
-            } catch (_) {
-                clearTimeout(durationProbeTimer);
-                durationProbePending = null;
-                resolve(0);
-            }
-        };
-        waitUntilReady();
-    });
-}
 
 /* ==========================================
-   LOAD LATEST LONG-FORM YOUTUBE UPLOADS
+
+   LOAD RSS UPLOADS
+
 ========================================== */
 
 async function loadLatestYouTubeUpload() {
+
+    songTitle.textContent = "Loading rmLv uploads...";
+
+    songStatus.textContent = "Checking for long-form videos";
+
+    previousButton.disabled = true;
+
+    nextButton.disabled = true;
+
+
     try {
-        const response = await fetch(API_URL + "&t=" + Date.now());
-        if (!response.ok) throw new Error("RSS request failed: " + response.status);
 
-        const data = await response.json();
-        if (data.status !== "ok" || !Array.isArray(data.items) || !data.items.length) {
-            throw new Error("No rmLv YouTube uploads found.");
+        const feedItems = await fetchUploadItems();
+
+        if (!Array.isArray(feedItems) || !feedItems.length) {
+
+            throw new Error("RSS feed returned no upload items");
+
         }
 
-        songTitle.textContent = "Finding long-form uploads…";
-        songStatus.textContent = "Filtering Shorts before showing the playlist";
 
-        const candidates = data.items.map(item => {
+        const seen = new Set();
+
+        candidateSongs = feedItems.map(item => {
+
             const id = extractVideoId(item);
-            const title = item.title || "rmLv Upload";
-            const link = item.link || `https://www.youtube.com/watch?v=${id}`;
-            const description = item.description || item.content || "";
-            const markedShort = /youtube\.com\/shorts\//i.test(link) ||
-                /youtu\.be\/shorts\//i.test(link) ||
-                /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(`${title} ${description}`);
-            return { id, title, link, description, markedShort };
-        }).filter(item => item.id && !item.markedShort);
 
-        // RSS doesn't include duration, so probe each candidate with the existing
-        // YouTube IFrame Player API. This needs no Data API key. Only videos >180s
-        // are added to the visible player list; unknown durations are excluded.
-        const longForm = [];
-        for (const item of candidates) {
-            const duration = await getVideoDurationWithoutKey(item.id);
-            if (duration > 180) {
-                longForm.push({ id: item.id, title: item.title, link: item.link, duration });
-            }
+            const title = String(item.title || "rmLv Upload").trim();
+
+            const link = String(item.link || "");
+
+            const description = String(item.description || item.content || "");
+
+            // Exclude obvious Shorts immediately, but duration is the final filter.
+
+            const obviousShort = /youtube\.com\/shorts\//i.test(link) ||
+
+                /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(title + " " + description);
+
+            if (!id || seen.has(id) || obviousShort) return null;
+
+            seen.add(id);
+
+            return { id, title, link, duration: 0 };
+
+        }).filter(Boolean);
+
+
+        if (!candidateSongs.length) {
+
+            throw new Error("No candidate uploads were found in the RSS feed");
+
         }
 
-        songs = longForm;
-        if (!songs.length) {
-            throw new Error("No long-form uploads could be verified. Refresh and try again; YouTube may be blocking embedded playback.");
-        }
 
-        currentSongIndex = 0;
-        displaySong(currentSongIndex, false);
-        songStatus.textContent = `Long-form uploads only · ${songs.length} found`;
+        rssLoaded = true;
+
+        startDurationScan();
+
     } catch (error) {
-        console.error("rmLv YouTube RSS / duration filter error:", error);
-        songs = [];
-        currentSongIndex = 0;
-        songTitle.textContent = "Unable to load long-form uploads";
-        songStatus.textContent = error.message || "Please refresh the page";
-        previousButton.disabled = true;
-        nextButton.disabled = true;
+
+        console.error("rmLv RSS loading error:", error);
+
+        showLoadError("Could not load YouTube uploads. Check your connection and refresh.");
+
     }
+
 }
 
+
 /* ==========================================
-   START
+
+   SCAN DURATIONS BEFORE SHOWING ANY VIDEO
+
 ========================================== */
 
-loadLatestYouTubeUpload();
+function startDurationScan() {
 
+    if (!youtubeAPIReady || !rssLoaded || scanStarted) return;
+
+    scanStarted = true;
+
+    songTitle.textContent = "Checking upload durations...";
+
+    songStatus.textContent = "Shorts will be hidden";
+
+
+    probePlayer = new YT.Player("youtubeProbe", {
+
+        width: "320",
+
+        height: "180",
+
+        videoId: candidateSongs[0].id,
+
+        playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
+
+        events: {
+
+            onReady: function () {
+
+                probeIndex = 0;
+
+                cueProbeCandidate();
+
+            },
+
+            onStateChange: onProbeStateChange,
+
+            onError: onProbeError
+
+        }
+
+    });
+
+}
+
+
+function cueProbeCandidate() {
+
+    if (!probePlayer || probeIndex >= candidateSongs.length) {
+
+        finishDurationScan();
+
+        return;
+
+    }
+
+    probeCurrentId = candidateSongs[probeIndex].id;
+
+    probeRetryCount = 0;
+
+    probeCheckPending = false;
+
+    try {
+
+        probePlayer.cueVideoById(probeCurrentId);
+
+        // Some browsers do not emit a fresh CUED event for an already-cued item.
+
+        setTimeout(checkProbeDuration, 900);
+
+    } catch (error) {
+
+        console.warn("Could not cue upload for duration check:", probeCurrentId, error);
+
+        moveToNextCandidate();
+
+    }
+
+}
+
+
+function onProbeStateChange(event) {
+
+    if (event.data === YT.PlayerState.CUED || event.data === YT.PlayerState.PAUSED) {
+
+        checkProbeDuration();
+
+    }
+
+}
+
+
+function checkProbeDuration() {
+
+    if (probeCheckPending || !probePlayer || probeIndex >= candidateSongs.length) return;
+
+    if (candidateSongs[probeIndex].id !== probeCurrentId) return;
+
+
+    let duration = 0;
+
+    try { duration = Number(probePlayer.getDuration()) || 0; } catch (_) {}
+
+
+    if (duration > 0) {
+
+        probeCheckPending = true;
+
+        candidateSongs[probeIndex].duration = duration;
+
+        if (duration > MIN_LONGFORM_SECONDS) {
+
+            songs.push(candidateSongs[probeIndex]);
+
+        }
+
+        moveToNextCandidate();
+
+        return;
+
+    }
+
+
+    if (probeRetryCount < 8) {
+
+        probeRetryCount++;
+
+        setTimeout(checkProbeDuration, 350);
+
+    } else {
+
+        // If YouTube won't provide a duration, don't display the video.
+
+        console.warn("Duration unavailable; hiding upload:", probeCurrentId);
+
+        probeCheckPending = true;
+
+        moveToNextCandidate();
+
+    }
+
+}
+
+
+function onProbeError(event) {
+
+    console.warn("YouTube could not inspect upload; hiding it:", probeCurrentId, event.data);
+
+    if (!probeCheckPending) {
+
+        probeCheckPending = true;
+
+        moveToNextCandidate();
+
+    }
+
+}
+
+
+function moveToNextCandidate() {
+
+    probeIndex++;
+
+    if (probeIndex >= candidateSongs.length) {
+
+        finishDurationScan();
+
+        return;
+
+    }
+
+    cueProbeCandidate();
+
+}
+
+
+function finishDurationScan() {
+
+    if (!songs.length) {
+
+        showLoadError("No long-form uploads found in the latest feed. Shorts and videos with unavailable durations were hidden.");
+
+        return;
+
+    }
+
+    currentSongIndex = 0;
+
+    displaySong(0, false);
+
+}
+
+
+/* ==========================================
+
+   MAIN PLAYER
+
+========================================== */
+
+function createYouTubePlayer(videoId, autoplay = false) {
+
+    if (!videoId || !youtubeAPIReady) return;
+
+    if (youtubePlayer) {
+
+        youtubePlayer.loadVideoById({ videoId: videoId });
+
+        if (!autoplay) youtubePlayer.pauseVideo();
+
+        return;
+
+    }
+
+    youtubePlayer = new YT.Player("youtubePlayer", {
+
+        width: "100%",
+
+        height: "100%",
+
+        videoId: videoId,
+
+        playerVars: { autoplay: autoplay ? 1 : 0, rel: 0, modestbranding: 1, playsinline: 1 },
+
+        events: { onStateChange: onPlayerStateChange }
+
+    });
+
+}
+
+
+function onPlayerStateChange(event) {
+
+    if (event.data === YT.PlayerState.ENDED) playNextAutomatically();
+
+}
+
+
+function displaySong(index, autoplay = false) {
+
+    if (!songs.length || !songs[index]) return;
+
+    currentSongIndex = index;
+
+    const song = songs[index];
+
+    createYouTubePlayer(song.id, autoplay);
+
+    songTitle.textContent = song.title;
+
+    songStatus.textContent = `Long-form upload ${index + 1} of ${songs.length} · ${formatDuration(song.duration)}`;
+
+    updateButtons();
+
+}
+
+
+function formatDuration(seconds) {
+
+    const mins = Math.floor(seconds / 60);
+
+    const secs = Math.floor(seconds % 60);
+
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+
+}
+
+
+function updateButtons() {
+
+    previousButton.disabled = currentSongIndex <= 0;
+
+    nextButton.disabled = currentSongIndex >= songs.length - 1;
+
+}
+
+
+function showNextSong() {
+
+    if (currentSongIndex < songs.length - 1) displaySong(currentSongIndex + 1, true);
+
+}
+
+
+function playNextAutomatically() {
+
+    if (currentSongIndex < songs.length - 1) {
+
+        displaySong(currentSongIndex + 1, true);
+
+    } else {
+
+        songStatus.textContent = "End of rmLv long-form uploads";
+
+        updateButtons();
+
+    }
+
+}
+
+
+function showPreviousSong() {
+
+    if (currentSongIndex > 0) displaySong(currentSongIndex - 1, true);
+
+}
+
+
+function showLoadError(message) {
+
+    songs = [];
+
+    currentSongIndex = 0;
+
+    songTitle.textContent = "Unable to load long-form uploads";
+
+    songStatus.textContent = message;
+
+    previousButton.disabled = true;
+
+    nextButton.disabled = true;
+
+}
+
+
+loadLatestYouTubeUpload();
 </script>
 
 </body>

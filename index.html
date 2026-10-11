@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>rmLv</title>
+<title>xlRVlx</title>
 
 <style>
 
@@ -518,9 +518,9 @@ footer {
     <div class="brand-profile">
 
         <img
-            src="./rmLv pp.png"
-            alt="rmLv profile picture"
-            onerror="this.style.display='none'; this.parentElement.classList.add('profile-fallback'); this.parentElement.innerHTML='<span>rmLv</span>';"
+            src="./profile.png"
+            alt="xlRVlx profile picture"
+            onerror="this.style.display='none'; this.parentElement.classList.add('profile-fallback'); this.parentElement.innerHTML='<span>xlRVlx</span>';"
         >
 
     </div>
@@ -528,7 +528,7 @@ footer {
 
     <div class="brand-hero-text">
 
-        <h1>rmLv</h1>
+        <h1>xlRVlx</h1>
 
         <p>
             Music &amp; Social Links
@@ -576,7 +576,7 @@ footer {
     class="song-status"
     id="songStatus">
 
-    Loading from rmLv...
+    Loading...
 
 </div>
 
@@ -631,7 +631,7 @@ footer {
 
 <a
 class="card"
-href="https://www.youtube.com/@rmLv.31"
+href="https://www.youtube.com/@xlRVlx.L731"
 target="_blank"
 rel="noopener">
 
@@ -666,7 +666,7 @@ d="M10 8l6 4-6 4V8z"/>
 
 <a
 class="card"
-href="https://www.tiktok.com/@rmlv.31"
+href="https://www.tiktok.com/@xlrvlx.l31"
 target="_blank"
 rel="noopener">
 
@@ -697,7 +697,7 @@ d="M15 3h3c.3 2 1.5 3.5 3.5 4v3c-1.5 0-2.8-.4-4-1.1v6.3c0 4-2.7 6.8-6.5 6.8S5 18
 
 <a
 class="card"
-href="https://www.facebook.com/rmLvL31/"
+href="https://www.facebook.com/xlRVlx.L31"
 target="_blank"
 rel="noopener">
 
@@ -728,7 +728,7 @@ d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm2.5 10H13v6h-3v-6H8v-2h2V8.8C10 6.9 
 
 <a
 class="card"
-href="https://www.instagram.com/rmlv.31/"
+href="https://www.instagram.com/xlrvlx/"
 target="_blank"
 rel="noopener">
 
@@ -779,7 +779,7 @@ fill="white"/>
 
 <a
 class="card"
-href="https://x.com/rmLv31"
+href="https://x.com/xlRVlx1231"
 target="_blank"
 rel="noopener">
 
@@ -917,7 +917,7 @@ d="M18.8 12.7c0-2.4 2-3.6 2.1-3.7-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.1-2.7.8-3.4.8-.7 
 
 <a
 class="card"
-href="https://rmlv.bandcamp.com/?ui_context=usernav"
+href="https://xlrvlx31.bandcamp.com/?ui_context=usernav"
 target="_blank"
 rel="noopener">
 
@@ -1029,13 +1029,13 @@ rel="noopener">
 
 
 <!-- =========================
-     MORE FROM rmLv
+     MORE FROM xlRVlx
 ========================= -->
 
 <section>
 
 <div class="section-title">
-    More from rmLv
+    More from xlRVlx
 </div>
 
 
@@ -1046,7 +1046,7 @@ rel="noopener">
 
 <a
 class="card"
-href="https://ph.pinterest.com/rmlv31/"
+href="https://ph.pinterest.com/dummz421/"
 target="_blank"
 rel="noopener">
 
@@ -1156,7 +1156,7 @@ d="M8 7h4.8c2.4 0 3.8 1.2 3.8 3 0 1.1-.6 2-1.6 2.5 1.3.4 2.1 1.4 2.1 2.8 0 2-1.5
 ========================= -->
 
 <footer>
-    © rmLv — OFFICIAL LINKS
+    © xlRVlx — OFFICIAL LINKS
 </footer>
 
 </div>
@@ -1166,601 +1166,492 @@ d="M8 7h4.8c2.4 0 3.8 1.2 3.8 3 0 1.1-.6 2-1.6 2.5 1.3.4 2.1 1.4 2.1 2.8 0 2-1.5
      YOUTUBE IFRAME API
 ========================= -->
 
-<!-- Off-screen player used only to read video durations without displaying Shorts. -->
-<div id="youtubeProbe" aria-hidden="true" style="position:fixed;left:-10000px;top:0;width:320px;height:180px;opacity:0;pointer-events:none;"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
+
 /* ==========================================
-
    YOUTUBE SETTINGS
-
 ========================================== */
 
-const CHANNEL_ID = "UCm8VZmOJXH7ap_dIaaCAnaQ";
+const CHANNEL_ID =
+    "UCOuQ_m5lZJfHD3rO6cuhHVw";
 
-const RSS_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=" + CHANNEL_ID;
+const FALLBACK_VIDEO_ID =
+    "VJncR7t_OT4";
 
-const API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(RSS_URL);
+const RSS_URL =
+    "https://www.youtube.com/feeds/videos.xml?channel_id="
+    + CHANNEL_ID;
 
-const MIN_LONGFORM_SECONDS = 180; // Only show videos longer than 3 minutes.
+const API_URL =
+    "https://api.rss2json.com/v1/api.json?rss_url="
+    + encodeURIComponent(RSS_URL);
 
 
 /* ==========================================
-
    PLAYER VARIABLES
-
 ========================================== */
 
 let songs = [];
-
-let candidateSongs = [];
 
 let currentSongIndex = 0;
 
 let youtubePlayer = null;
 
-let probePlayer = null;
-
 let youtubeAPIReady = false;
 
-let rssLoaded = false;
-
-let scanStarted = false;
-
-let probeIndex = 0;
-
-let probeCurrentId = null;
-
-let probeRetryCount = 0;
-
-let probeCheckPending = false;
-let probeCheckRunning = false;
-
-
-const songTitle = document.getElementById("songTitle");
-
-const songStatus = document.getElementById("songStatus");
-
-const previousButton = document.getElementById("previousButton");
-
-const nextButton = document.getElementById("nextButton");
+let pendingVideoId = null;
 
 
 /* ==========================================
+   HTML ELEMENTS
+========================================== */
 
+const songTitle =
+    document.getElementById("songTitle");
+
+const songStatus =
+    document.getElementById("songStatus");
+
+const previousButton =
+    document.getElementById("previousButton");
+
+const nextButton =
+    document.getElementById("nextButton");
+
+
+/* ==========================================
    YOUTUBE API READY
-
 ========================================== */
 
 function onYouTubeIframeAPIReady() {
 
     youtubeAPIReady = true;
 
-    startDurationScan();
+    if (pendingVideoId) {
 
+        createYouTubePlayer(
+            pendingVideoId,
+            false
+        );
+
+        pendingVideoId = null;
+    }
 }
 
 
 /* ==========================================
+   CREATE YOUTUBE PLAYER
+========================================== */
 
-   VIDEO ID EXTRACTION
+function createYouTubePlayer(
+    videoId,
+    autoplay = false
+) {
 
+    if (!videoId) {
+        return;
+    }
+
+    if (!youtubeAPIReady) {
+
+        pendingVideoId = videoId;
+
+        return;
+    }
+
+
+    if (youtubePlayer) {
+
+        youtubePlayer.loadVideoById(
+            videoId
+        );
+
+        if (!autoplay) {
+
+            youtubePlayer.pauseVideo();
+        }
+
+        return;
+    }
+
+
+    youtubePlayer =
+        new YT.Player(
+            "youtubePlayer",
+            {
+
+                videoId: videoId,
+
+                playerVars: {
+
+                    autoplay:
+                        autoplay ? 1 : 0,
+
+                    rel: 0,
+
+                    modestbranding: 1
+                },
+
+                events: {
+
+                    onStateChange:
+                        onPlayerStateChange
+                }
+            }
+        );
+}
+
+
+/* ==========================================
+   PLAYER STATE
+========================================== */
+
+function onPlayerStateChange(event) {
+
+    if (
+        event.data ===
+        YT.PlayerState.ENDED
+    ) {
+
+        playNextAutomatically();
+    }
+}
+
+
+/* ==========================================
+   DISPLAY SONG
+   THIS CONTROLS THE NOW PLAYING TEXT
+========================================== */
+
+function displaySong(
+    index,
+    autoplay = false
+) {
+
+    if (
+        !songs.length ||
+        !songs[index]
+    ) {
+
+        return;
+    }
+
+
+    const song =
+        songs[index];
+
+
+    createYouTubePlayer(
+        song.id,
+        autoplay
+    );
+
+
+    /* Show the actual YouTube upload title */
+
+    songTitle.textContent =
+        song.title;
+
+
+    /*
+        IMPORTANT:
+        The status now ALWAYS matches
+        the actual selected song title.
+    */
+
+    if (index === 0) {
+
+        songStatus.textContent =
+            `Latest: "${song.title}"`;
+
+    } else {
+
+        songStatus.textContent =
+            `Now playing "${song.title}" from xlRVlx`;
+    }
+
+
+    updateButtons();
+}
+
+
+/* ==========================================
+   UPDATE BUTTONS
+========================================== */
+
+function updateButtons() {
+
+    previousButton.disabled =
+        currentSongIndex <= 0;
+
+    nextButton.disabled =
+        currentSongIndex >=
+        songs.length - 1;
+}
+
+
+/* ==========================================
+   MANUAL NEXT
+========================================== */
+
+function showNextSong() {
+
+    if (
+        currentSongIndex <
+        songs.length - 1
+    ) {
+
+        currentSongIndex++;
+
+        displaySong(
+            currentSongIndex,
+            true
+        );
+    }
+}
+
+
+/* ==========================================
+   AUTOMATIC NEXT
+========================================== */
+
+function playNextAutomatically() {
+
+    if (
+        currentSongIndex <
+        songs.length - 1
+    ) {
+
+        currentSongIndex++;
+
+        /*
+            displaySong() now handles
+            the exact title automatically.
+        */
+
+        displaySong(
+            currentSongIndex,
+            true
+        );
+
+    } else {
+
+        songStatus.textContent =
+            "End of xlRVlx uploads";
+
+        updateButtons();
+    }
+}
+
+
+/* ==========================================
+   MANUAL PREVIOUS
+========================================== */
+
+function showPreviousSong() {
+
+    if (
+        currentSongIndex > 0
+    ) {
+
+        currentSongIndex--;
+
+        displaySong(
+            currentSongIndex,
+            true
+        );
+    }
+}
+
+
+/* ==========================================
+   EXTRACT YOUTUBE VIDEO ID
 ========================================== */
 
 function extractVideoId(item) {
 
+    let videoId = "";
+
+
     if (item.guid) {
 
-        const m = String(item.guid).match(/video:([a-zA-Z0-9_-]+)/);
-
-        if (m) return m[1];
-
-    }
-
-    const text = String(item.link || item.guid || "");
-
-    let m = text.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-
-    if (m) return m[1];
-
-    m = text.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-
-    if (m) return m[1];
-
-    m = text.match(/youtube\.com\/(?:shorts|embed)\/([a-zA-Z0-9_-]+)/i);
-
-    return m ? m[1] : "";
-
-}
+        const guidMatch =
+            item.guid.match(
+                /video:([a-zA-Z0-9_-]+)/
+            );
 
 
+        if (guidMatch) {
 
-/* ==========================================
-
-   FEED PROVIDERS
-
-   Try RSS2JSON first, then a public RSS proxy
-
-   if the first service is unavailable.
-
-========================================== */
-
-async function fetchUploadItems() {
-
-    // Provider 1: RSS2JSON. Use the current YouTube XML feed URL above.
-    try {
-        const response = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
-        if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data.items) && data.items.length) {
-                return data.items;
-            }
-            console.warn("RSS2JSON did not return uploads:", data.message || data.status || "empty items", data);
-        } else {
-            console.warn("RSS2JSON HTTP error:", response.status);
-        }
-    } catch (error) {
-        console.warn("RSS2JSON unavailable; trying RSS proxy fallbacks:", error);
-    }
-
-    // Parse YouTube's Atom feed into the same item shape used by RSS2JSON.
-    function parseYouTubeFeedXML(xmlText) {
-        const xml = new DOMParser().parseFromString(xmlText, "text/xml");
-        if (xml.querySelector("parsererror")) throw new Error("Could not parse YouTube RSS XML");
-        const items = Array.from(xml.getElementsByTagName("entry")).map(entry => {
-            const getText = (localName) => {
-                const node = entry.getElementsByTagNameNS("*", localName)[0];
-                return node ? node.textContent.trim() : "";
-            };
-            const videoId = getText("videoId");
-            const title = getText("title");
-            const description = getText("description");
-            const linkNode = Array.from(entry.getElementsByTagName("link"))
-                .find(node => node.getAttribute("rel") === "alternate") || entry.getElementsByTagName("link")[0];
-            return {
-                guid: videoId ? "yt:video:" + videoId : "",
-                title,
-                description,
-                link: linkNode ? (linkNode.getAttribute("href") || "") : ""
-            };
-        }).filter(item => item.guid);
-        if (!items.length) throw new Error("YouTube RSS feed contained no uploads");
-        return items;
-    }
-
-    // Public proxies can be temporarily unavailable, so try them independently.
-    const fallbackURLs = [
-        "https://api.allorigins.win/raw?url=" + encodeURIComponent(RSS_URL) + "&t=" + Date.now(),
-        "https://corsproxy.io/?url=" + encodeURIComponent(RSS_URL)
-    ];
-
-    let lastError = null;
-    for (const fallbackURL of fallbackURLs) {
-        try {
-            const fallbackResponse = await fetch(fallbackURL, { cache: "no-store" });
-            if (!fallbackResponse.ok) throw new Error("RSS proxy returned HTTP " + fallbackResponse.status);
-            let xmlText = await fallbackResponse.text();
-            // Some proxy responses wrap the upstream payload in a JSON object.
-            try {
-                const wrapped = JSON.parse(xmlText);
-                if (typeof wrapped.contents === "string") xmlText = wrapped.contents;
-                else if (typeof wrapped.data === "string") xmlText = wrapped.data;
-            } catch (_) {}
-            return parseYouTubeFeedXML(xmlText);
-        } catch (error) {
-            lastError = error;
-            console.warn("YouTube RSS proxy failed; trying next option:", error);
+            videoId =
+                guidMatch[1];
         }
     }
 
-    throw lastError || new Error("All YouTube RSS providers failed");
+
+    if (
+        !videoId &&
+        item.link
+    ) {
+
+        const linkMatch =
+            item.link.match(
+                /[?&]v=([a-zA-Z0-9_-]+)/
+            );
+
+
+        if (linkMatch) {
+
+            videoId =
+                linkMatch[1];
+        }
+    }
+
+
+    return videoId;
 }
 
+
 /* ==========================================
-
-   LOAD RSS UPLOADS
-
+   LOAD LATEST YOUTUBE UPLOADS
 ========================================== */
 
 async function loadLatestYouTubeUpload() {
 
-    songTitle.textContent = "Loading rmLv uploads...";
-
-    songStatus.textContent = "Checking for long-form videos";
-
-    previousButton.disabled = true;
-
-    nextButton.disabled = true;
-
-
     try {
 
-        const feedItems = await fetchUploadItems();
+        const response =
+            await fetch(
+                API_URL +
+                "&t=" +
+                Date.now()
+            );
 
-        if (!Array.isArray(feedItems) || !feedItems.length) {
 
-            throw new Error("RSS feed returned no upload items");
+        if (!response.ok) {
 
+            throw new Error(
+                "RSS request failed: " +
+                response.status
+            );
         }
 
 
-        const seen = new Set();
-
-        candidateSongs = feedItems.map(item => {
-
-            const id = extractVideoId(item);
-
-            const title = String(item.title || "rmLv Upload").trim();
-
-            const link = String(item.link || "");
-
-            const description = String(item.description || item.content || "");
-
-            // Exclude obvious Shorts immediately, but duration is the final filter.
-
-            const obviousShort = /youtube\.com\/shorts\//i.test(link) ||
-
-                /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(title + " " + description);
-
-            if (!id || seen.has(id) || obviousShort) return null;
-
-            seen.add(id);
-
-            return { id, title, link, duration: 0 };
-
-        }).filter(Boolean);
+        const data =
+            await response.json();
 
 
-        if (!candidateSongs.length) {
+        if (
+            data.status !== "ok" ||
+            !data.items ||
+            !data.items.length
+        ) {
 
-            throw new Error("No candidate uploads were found in the RSS feed");
-
+            throw new Error(
+                "No YouTube uploads found."
+            );
         }
 
 
-        rssLoaded = true;
+        songs =
+            data.items
+                .map(item => {
 
-        startDurationScan();
+                    const videoId =
+                        extractVideoId(item);
+
+
+                    return {
+
+                        id:
+                            videoId,
+
+                        title:
+                            item.title ||
+                            "xlRVlx Upload",
+
+                        link:
+                            item.link ||
+                            `https://www.youtube.com/watch?v=${videoId}`
+                    };
+
+                })
+                .filter(
+                    song => song.id
+                );
+
+
+        if (!songs.length) {
+
+            throw new Error(
+                "Could not extract video IDs."
+            );
+        }
+
+
+        /*
+            RSS returns the newest upload first.
+        */
+
+        currentSongIndex = 0;
+
+
+        displaySong(
+            currentSongIndex,
+            false
+        );
+
 
     } catch (error) {
 
-        console.error("rmLv upload-feed loading failed:", error);
+        console.error(
+            "YouTube RSS error:",
+            error
+        );
 
-        showLoadError("Could not load the upload feed. Open F12 → Console for the exact network error, then refresh.");
+
+        /*
+            Fallback keeps the site working
+            if RSS2JSON is temporarily unavailable.
+        */
+
+        songs = [
+
+            {
+
+                id:
+                    FALLBACK_VIDEO_ID,
+
+                title:
+                    "xlRVlx",
+
+                link:
+                    `https://www.youtube.com/watch?v=${FALLBACK_VIDEO_ID}`
+            }
+
+        ];
+
+
+        currentSongIndex = 0;
+
+
+        displaySong(
+            currentSongIndex,
+            false
+        );
 
     }
-
 }
 
 
 /* ==========================================
-
-   SCAN DURATIONS BEFORE SHOWING ANY VIDEO
-
+   START
 ========================================== */
-
-function startDurationScan() {
-
-    if (!youtubeAPIReady || !rssLoaded || scanStarted) return;
-
-    scanStarted = true;
-
-    songTitle.textContent = "Checking upload durations...";
-
-    songStatus.textContent = "Shorts will be hidden";
-
-
-    probePlayer = new YT.Player("youtubeProbe", {
-
-        width: "320",
-
-        height: "180",
-
-        videoId: candidateSongs[0].id,
-
-        playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
-
-        events: {
-
-            onReady: function () {
-
-                probeIndex = 0;
-
-                cueProbeCandidate();
-
-            },
-
-            onStateChange: onProbeStateChange,
-
-            onError: onProbeError
-
-        }
-
-    });
-
-}
-
-
-function cueProbeCandidate() {
-
-    if (!probePlayer || probeIndex >= candidateSongs.length) {
-
-        finishDurationScan();
-
-        return;
-
-    }
-
-    probeCurrentId = candidateSongs[probeIndex].id;
-
-    probeRetryCount = 0;
-
-    probeCheckPending = false;
-
-    try {
-
-        probePlayer.cueVideoById(probeCurrentId);
-
-        // Some browsers do not emit a fresh CUED event for an already-cued item.
-
-        setTimeout(checkProbeDuration, 900);
-
-    } catch (error) {
-
-        console.warn("Could not cue upload for duration check:", probeCurrentId, error);
-
-        moveToNextCandidate();
-
-    }
-
-}
-
-
-function onProbeStateChange(event) {
-
-    if (event.data === YT.PlayerState.CUED || event.data === YT.PlayerState.PAUSED) {
-
-        checkProbeDuration();
-
-    }
-
-}
-
-
-function checkProbeDuration() {
-
-    if (probeCheckPending || !probePlayer || probeIndex >= candidateSongs.length) return;
-
-    if (candidateSongs[probeIndex].id !== probeCurrentId) return;
-
-
-    let duration = 0;
-
-    try { duration = Number(probePlayer.getDuration()) || 0; } catch (_) {}
-
-
-    if (duration > 0) {
-
-        probeCheckPending = true;
-
-        candidateSongs[probeIndex].duration = duration;
-
-        if (duration > MIN_LONGFORM_SECONDS) {
-
-            songs.push(candidateSongs[probeIndex]);
-
-        }
-
-        moveToNextCandidate();
-
-        return;
-
-    }
-
-
-    if (probeRetryCount < 8) {
-
-        probeRetryCount++;
-
-        setTimeout(checkProbeDuration, 350);
-
-    } else {
-
-        // If YouTube won't provide a duration, don't display the video.
-
-        console.warn("Duration unavailable; hiding upload:", probeCurrentId);
-
-        probeCheckPending = true;
-
-        moveToNextCandidate();
-
-    }
-
-}
-
-
-function onProbeError(event) {
-
-    console.warn("YouTube could not inspect upload; hiding it:", probeCurrentId, event.data);
-
-    if (!probeCheckPending) {
-
-        probeCheckPending = true;
-
-        moveToNextCandidate();
-
-    }
-
-}
-
-
-function moveToNextCandidate() {
-
-    probeIndex++;
-
-    if (probeIndex >= candidateSongs.length) {
-
-        finishDurationScan();
-
-        return;
-
-    }
-
-    cueProbeCandidate();
-
-}
-
-
-function finishDurationScan() {
-
-    if (!songs.length) {
-
-        showLoadError("No long-form uploads found in the latest feed. Shorts and videos with unavailable durations were hidden.");
-
-        return;
-
-    }
-
-    currentSongIndex = 0;
-
-    displaySong(0, false);
-
-}
-
-
-/* ==========================================
-
-   MAIN PLAYER
-
-========================================== */
-
-function createYouTubePlayer(videoId, autoplay = false) {
-
-    if (!videoId || !youtubeAPIReady) return;
-
-    if (youtubePlayer) {
-
-        youtubePlayer.loadVideoById({ videoId: videoId });
-
-        if (!autoplay) youtubePlayer.pauseVideo();
-
-        return;
-
-    }
-
-    youtubePlayer = new YT.Player("youtubePlayer", {
-
-        width: "100%",
-
-        height: "100%",
-
-        videoId: videoId,
-
-        playerVars: { autoplay: autoplay ? 1 : 0, rel: 0, modestbranding: 1, playsinline: 1 },
-
-        events: { onStateChange: onPlayerStateChange }
-
-    });
-
-}
-
-
-function onPlayerStateChange(event) {
-
-    if (event.data === YT.PlayerState.ENDED) playNextAutomatically();
-
-}
-
-
-function displaySong(index, autoplay = false) {
-
-    if (!songs.length || !songs[index]) return;
-
-    currentSongIndex = index;
-
-    const song = songs[index];
-
-    createYouTubePlayer(song.id, autoplay);
-
-    songTitle.textContent = song.title;
-
-    songStatus.textContent = `Long-form upload ${index + 1} of ${songs.length} · ${formatDuration(song.duration)}`;
-
-    updateButtons();
-
-}
-
-
-function formatDuration(seconds) {
-
-    const mins = Math.floor(seconds / 60);
-
-    const secs = Math.floor(seconds % 60);
-
-    return `${mins}:${String(secs).padStart(2, "0")}`;
-
-}
-
-
-function updateButtons() {
-
-    previousButton.disabled = currentSongIndex <= 0;
-
-    nextButton.disabled = currentSongIndex >= songs.length - 1;
-
-}
-
-
-function showNextSong() {
-
-    if (currentSongIndex < songs.length - 1) displaySong(currentSongIndex + 1, true);
-
-}
-
-
-function playNextAutomatically() {
-
-    if (currentSongIndex < songs.length - 1) {
-
-        displaySong(currentSongIndex + 1, true);
-
-    } else {
-
-        songStatus.textContent = "End of rmLv long-form uploads";
-
-        updateButtons();
-
-    }
-
-}
-
-
-function showPreviousSong() {
-
-    if (currentSongIndex > 0) displaySong(currentSongIndex - 1, true);
-
-}
-
-
-function showLoadError(message) {
-
-    songs = [];
-
-    currentSongIndex = 0;
-
-    songTitle.textContent = "Unable to load long-form uploads";
-
-    songStatus.textContent = message;
-
-    previousButton.disabled = true;
-
-    nextButton.disabled = true;
-
-}
-
 
 loadLatestYouTubeUpload();
+
 </script>
 
 </body>

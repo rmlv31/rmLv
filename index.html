@@ -1293,10 +1293,10 @@ async function fetchUploadItems() {
         const response = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
         if (response.ok) {
             const data = await response.json();
-            if (data.status === "ok" && Array.isArray(data.items) && data.items.length) {
+            if (Array.isArray(data.items) && data.items.length) {
                 return data.items;
             }
-            console.warn("RSS2JSON did not return uploads:", data.message || data.status);
+            console.warn("RSS2JSON did not return uploads:", data.message || data.status || "empty items", data);
         } else {
             console.warn("RSS2JSON HTTP error:", response.status);
         }
@@ -1340,7 +1340,13 @@ async function fetchUploadItems() {
         try {
             const fallbackResponse = await fetch(fallbackURL, { cache: "no-store" });
             if (!fallbackResponse.ok) throw new Error("RSS proxy returned HTTP " + fallbackResponse.status);
-            const xmlText = await fallbackResponse.text();
+            let xmlText = await fallbackResponse.text();
+            // Some proxy responses wrap the upstream payload in a JSON object.
+            try {
+                const wrapped = JSON.parse(xmlText);
+                if (typeof wrapped.contents === "string") xmlText = wrapped.contents;
+                else if (typeof wrapped.data === "string") xmlText = wrapped.data;
+            } catch (_) {}
             return parseYouTubeFeedXML(xmlText);
         } catch (error) {
             lastError = error;
@@ -1419,9 +1425,9 @@ async function loadLatestYouTubeUpload() {
 
     } catch (error) {
 
-        console.error("rmLv RSS loading error:", error);
+        console.error("rmLv upload-feed loading failed:", error);
 
-        showLoadError("Could not load YouTube uploads. Check your connection and refresh.");
+        showLoadError("Could not load the upload feed. Open F12 → Console for the exact network error, then refresh.");
 
     }
 

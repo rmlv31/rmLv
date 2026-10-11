@@ -1184,13 +1184,14 @@ const CHANNEL_ID =
     an error message instead of playing an old song.
 */
 
-/*
-    YouTube Data API v3:
-    1. Enable YouTube Data API v3 in Google Cloud Console.
-    2. Create an API key and paste it below.
-    3. Restrict the key to YouTube Data API v3 and your website referrer.
-*/
-const YOUTUBE_API_KEY = "PASTE_YOUR_YOUTUBE_DATA_API_KEY_HERE";
+const RSS_URL =
+    "https://www.youtube.com/feeds/videos.xml?channel_id="
+    + CHANNEL_ID;
+
+const API_URL =
+    "https://api.rss2json.com/v1/api.json?rss_url="
+    + encodeURIComponent(RSS_URL);
+
 
 /* ==========================================
    PLAYER VARIABLES
@@ -1300,22 +1301,7 @@ function createYouTubePlayer(
                 events: {
 
                     onStateChange:
-                        onPlayerStateChange,
-
-                    onError: function(event) {
-                        const code = event.data;
-                        const messages = {
-                            2: "YouTube rejected this video ID.",
-                            5: "This video cannot play in the HTML5 player.",
-                            100: "This video is unavailable or private.",
-                            101: "This video owner does not allow embedded playback.",
-                            150: "This video owner does not allow embedded playback.",
-                            153: "YouTube needs a valid page referrer. Open this player from a website or localhost, not directly as a file."
-                        };
-                        songStatus.textContent =
-                            (messages[code] || "YouTube playback failed.") +
-                            " (Error " + code + ")";
-                    }
+                        onPlayerStateChange
                 }
             }
         );
@@ -1519,156 +1505,141 @@ function extractVideoId(item) {
 
 
 /* ==========================================
-   LOAD LATEST YOUTUBE UPLOADS
+   CHECK DURATION WITHOUT A DATA API KEY
+========================================== */
+
+let durationProbePlayer = null;
+let durationProbeReady = false;
+let durationProbePending = null;
+let durationProbeTimer = null;
+
+function ensureDurationProbe() {
+    if (durationProbePlayer || !youtubeAPIReady) return;
+
+    let probeHost = document.getElementById("rmLvDurationProbe");
+    if (!probeHost) {
+        probeHost = document.createElement("div");
+        probeHost.id = "rmLvDurationProbe";
+        probeHost.setAttribute("aria-hidden", "true");
+        probeHost.style.cssText = "position:fixed;left:-10000px;top:0;width:200px;height:200px;overflow:hidden;pointer-events:none;";
+        document.body.appendChild(probeHost);
+    }
+
+    durationProbePlayer = new YT.Player("rmLvDurationProbe", {
+        width: "200",
+        height: "200",
+        playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
+        events: {
+            onReady: function () { durationProbeReady = true; },
+            onStateChange: function (event) {
+                if (event.data === YT.PlayerState.CUED && durationProbePending) {
+                    const pending = durationProbePending;
+                    durationProbePending = null;
+                    clearTimeout(durationProbeTimer);
+                    let duration = 0;
+                    try { duration = Number(durationProbePlayer.getDuration()) || 0; } catch (_) {}
+                    pending(duration);
+                }
+            },
+            onError: function () {
+                if (durationProbePending) {
+                    const pending = durationProbePending;
+                    durationProbePending = null;
+                    clearTimeout(durationProbeTimer);
+                    pending(0);
+                }
+            }
+        }
+    });
+}
+
+function getVideoDurationWithoutKey(videoId) {
+    return new Promise(resolve => {
+        ensureDurationProbe();
+        const startedAt = Date.now();
+        const waitUntilReady = () => {
+            if (!durationProbePlayer || !durationProbeReady) {
+                if (Date.now() - startedAt > 8000) return resolve(0);
+                return setTimeout(waitUntilReady, 100);
+            }
+            if (durationProbePending) {
+                // A previous probe is still pending; don't overlap requests.
+                return setTimeout(waitUntilReady, 100);
+            }
+            durationProbePending = resolve;
+            durationProbeTimer = setTimeout(() => {
+                if (durationProbePending === resolve) durationProbePending = null;
+                resolve(0);
+            }, 5000);
+            try {
+                durationProbePlayer.cueVideoById(videoId);
+            } catch (_) {
+                clearTimeout(durationProbeTimer);
+                durationProbePending = null;
+                resolve(0);
+            }
+        };
+        waitUntilReady();
+    });
+}
+
+/* ==========================================
+   LOAD LATEST LONG-FORM YOUTUBE UPLOADS
 ========================================== */
 
 async function loadLatestYouTubeUpload() {
     try {
-        if (
-            !YOUTUBE_API_KEY ||
-            YOUTUBE_API_KEY === "PASTE_YOUR_YOUTUBE_DATA_API_KEY_HERE"
-        ) {
-            throw new Error("Add your YouTube Data API key to the HTML first.");
+        const response = await fetch(API_URL + "&t=" + Date.now());
+        if (!response.ok) throw new Error("RSS request failed: " + response.status);
+
+        const data = await response.json();
+        if (data.status !== "ok" || !Array.isArray(data.items) || !data.items.length) {
+            throw new Error("No rmLv YouTube uploads found.");
         }
 
-        const apiRequest = async (url) => {
-            const response = await fetch(url);
-            const data = await response.json();
+        songTitle.textContent = "Finding long-form uploads…";
+        songStatus.textContent = "Filtering Shorts before showing the playlist";
 
-            if (!response.ok || data.error) {
-                const message = data?.error?.message || `YouTube API request failed (${response.status})`;
-                throw new Error(message);
-            }
-            return data;
-        };
+        const candidates = data.items.map(item => {
+            const id = extractVideoId(item);
+            const title = item.title || "rmLv Upload";
+            const link = item.link || `https://www.youtube.com/watch?v=${id}`;
+            const description = item.description || item.content || "";
+            const markedShort = /youtube\.com\/shorts\//i.test(link) ||
+                /youtu\.be\/shorts\//i.test(link) ||
+                /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(`${title} ${description}`);
+            return { id, title, link, description, markedShort };
+        }).filter(item => item.id && !item.markedShort);
 
-        // Get the channel's uploads playlist.
-        const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
-        channelUrl.search = new URLSearchParams({
-            part: "contentDetails",
-            id: CHANNEL_ID,
-            key: YOUTUBE_API_KEY
-        }).toString();
-
-        const channelData = await apiRequest(channelUrl.toString());
-        const uploadsPlaylistId =
-            channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-
-        if (!uploadsPlaylistId) {
-            throw new Error("Could not find the channel uploads playlist.");
-        }
-
-        // Read up to 500 recent uploads, newest first. Pagination matters because
-        // the newest uploads may be Shorts and we still need to find long-form videos.
-        const playlistItems = [];
-        let pageToken = "";
-        do {
-            const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-            const playlistParams = {
-                part: "snippet,contentDetails",
-                playlistId: uploadsPlaylistId,
-                maxResults: "50",
-                key: YOUTUBE_API_KEY
-            };
-            if (pageToken) playlistParams.pageToken = pageToken;
-            playlistUrl.search = new URLSearchParams(playlistParams).toString();
-
-            const playlistData = await apiRequest(playlistUrl.toString());
-            playlistItems.push(...(playlistData.items || [])
-                .map(item => ({
-                    id: item.contentDetails?.videoId || item.snippet?.resourceId?.videoId,
-                    title: item.snippet?.title || "rmLv Upload",
-                    description: item.snippet?.description || "",
-                    publishedAt: item.contentDetails?.videoPublishedAt || item.snippet?.publishedAt || ""
-                }))
-                .filter(item => item.id));
-
-            pageToken = playlistData.nextPageToken || "";
-        } while (pageToken && playlistItems.length < 500);
-
-        if (!playlistItems.length) {
-            throw new Error("No public uploads were returned for the channel.");
-        }
-
-        // Fetch durations so short videos can be excluded from the long-form player.
-        const videoDetails = new Map();
-        for (let i = 0; i < playlistItems.length; i += 50) {
-            const batch = playlistItems.slice(i, i + 50);
-            const videosUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-            videosUrl.search = new URLSearchParams({
-                part: "contentDetails,snippet,status",
-                id: batch.map(video => video.id).join(","),
-                key: YOUTUBE_API_KEY
-            }).toString();
-
-            const videosData = await apiRequest(videosUrl.toString());
-            for (const video of (videosData.items || [])) {
-                videoDetails.set(video.id, {
-                    duration: video.contentDetails?.duration || "",
-                    title: video.snippet?.title || "",
-                    description: video.snippet?.description || "",
-                    privacyStatus: video.status?.privacyStatus || ""
-                });
+        // RSS doesn't include duration, so probe each candidate with the existing
+        // YouTube IFrame Player API. This needs no Data API key. Only videos >180s
+        // are added to the visible player list; unknown durations are excluded.
+        const longForm = [];
+        for (const item of candidates) {
+            const duration = await getVideoDurationWithoutKey(item.id);
+            if (duration > 180) {
+                longForm.push({ id: item.id, title: item.title, link: item.link, duration });
             }
         }
 
-        function durationInSeconds(isoDuration) {
-            const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(isoDuration || "");
-            if (!match) return 0;
-            return (Number(match[1] || 0) * 3600) +
-                   (Number(match[2] || 0) * 60) +
-                   Number(match[3] || 0);
-        }
-
-        songs = playlistItems
-            .map(item => {
-                const details = videoDetails.get(item.id);
-                // If YouTube returns no duration/details, do NOT show the video.
-                // This prevents Shorts or unavailable items slipping into the player.
-                if (!details || !details.duration) return null;
-
-                const title = details.title || item.title;
-                const duration = durationInSeconds(details.duration);
-                const titleLooksLikeShort = /#shorts|\/shorts\//i.test(title + " " + item.description);
-
-                // Only include videos strictly longer than 180 seconds.
-                // Filtering happens before display, so Shorts never appear in the player.
-                if (duration <= 180 || titleLooksLikeShort) return null;
-                if (details.privacyStatus && details.privacyStatus !== "public") return null;
-
-                return {
-                    id: item.id,
-                    title,
-                    link: `https://www.youtube.com/watch?v=${item.id}`,
-                    publishedAt: item.publishedAt
-                };
-            })
-            .filter(Boolean);
-
+        songs = longForm;
         if (!songs.length) {
-            throw new Error("No public long-form uploads were found in the recent uploads.");
+            throw new Error("No long-form uploads could be verified. Refresh and try again; YouTube may be blocking embedded playback.");
         }
 
         currentSongIndex = 0;
         displaySong(currentSongIndex, false);
-
+        songStatus.textContent = `Long-form uploads only · ${songs.length} found`;
     } catch (error) {
-        console.error("rmLv YouTube Data API error:", error);
-
+        console.error("rmLv YouTube RSS / duration filter error:", error);
         songs = [];
         currentSongIndex = 0;
-
-        songTitle.textContent = "Unable to load latest upload";
-        songStatus.textContent =
-            error.message && error.message.includes("API key")
-                ? "Add your YouTube Data API key in the HTML"
-                : (error.message || "Check API key, quota, or API settings");
-
+        songTitle.textContent = "Unable to load long-form uploads";
+        songStatus.textContent = error.message || "Please refresh the page";
         previousButton.disabled = true;
         nextButton.disabled = true;
     }
 }
-
 
 /* ==========================================
    START

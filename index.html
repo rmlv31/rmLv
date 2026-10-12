@@ -1175,13 +1175,24 @@ function onYouTubeIframeAPIReady() {
     }
   });
 }
+function getTrueSongTitle(fullTitle) {
+  // Remove the artist/branding suffix and promotional metadata from YouTube titles.
+  // Example: I'm Still Here — rmLv | Official Lyric Video | Emotional EDM Love Song
+  // becomes: I'm Still Here
+  let title = String(fullTitle || '').trim();
+  title = title.split(/\s+[|｜]\s+/)[0].trim();
+  title = title.replace(/\s+[—–-]\s*rmLv\b.*$/i, '').trim();
+  return title || String(fullTitle || '').trim();
+}
+
 function updateCurrentVideo() {
   if (!playerReady || !mainPlayer || typeof mainPlayer.getVideoData !== 'function') return;
   const data = mainPlayer.getVideoData();
   if (data && data.title) {
-    songTitle.textContent = data.title;
+    const trueTitle = getTrueSongTitle(data.title);
+    songTitle.textContent = trueTitle;
     const heading = document.getElementById('latestReleaseHeading');
-    if (heading) heading.textContent = `LATEST RELEASE | \"${data.title}\"`;
+    if (heading) heading.textContent = `LATEST RELEASE | \"${trueTitle}\"`;
   }
   const index = typeof mainPlayer.getPlaylistIndex === 'function' ? mainPlayer.getPlaylistIndex() : -1;
   const playlist = typeof mainPlayer.getPlaylist === 'function' ? mainPlayer.getPlaylist() : null;

@@ -562,7 +562,7 @@ footer {
 ========================= -->
 
 <section id="featuredUploadsSection">
-  <div class="section-title">Latest Release | rmLv</div>
+  <div class="section-title" id="latestReleaseHeading">LATEST RELEASE | &quot;LOADING...&quot;</div>
   <div class="featured">
     <div class="player-card">
       <div class="player-wrapper"><div id="youtubePlayer"></div></div>
@@ -1178,7 +1178,11 @@ function onYouTubeIframeAPIReady() {
 function updateCurrentVideo() {
   if (!playerReady || !mainPlayer || typeof mainPlayer.getVideoData !== 'function') return;
   const data = mainPlayer.getVideoData();
-  if (data && data.title) songTitle.textContent = data.title;
+  if (data && data.title) {
+    songTitle.textContent = data.title;
+    const heading = document.getElementById('latestReleaseHeading');
+    if (heading) heading.textContent = `LATEST RELEASE | \"${data.title}\"`;
+  }
   const index = typeof mainPlayer.getPlaylistIndex === 'function' ? mainPlayer.getPlaylistIndex() : -1;
   const playlist = typeof mainPlayer.getPlaylist === 'function' ? mainPlayer.getPlaylist() : null;
   songStatus.textContent = (index >= 0 && playlist && playlist.length)
@@ -1204,169 +1208,7 @@ function showPreviousSong() {
   }
 }
 </script>
-<script>
-const CHANNEL_ID = "UCm8VZmOJXH7ap_dIaaCAnaQ";
-// YouTube's channel Videos-tab playlist uses the UULF prefix (rather than the
-// general uploads feed, which mixes Shorts and regular videos).
-const VIDEOS_PLAYLIST_ID = "UULF" + CHANNEL_ID.slice(2);
-const RSS_URL = "https://www.youtube.com/feeds/videos.xml?playlist_id=" + VIDEOS_PLAYLIST_ID;
-const RSS2JSON_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(RSS_URL);
-const MIN_LONGFORM_SECONDS = 180; // Exclude videos of 3 minutes or less.
-const MAX_CANDIDATES_TO_CHECK = 15;
-let songs = [];
-let currentSongIndex = 0;
-let mainPlayer = null;
-let probePlayer = null;
-let youtubeAPIReady = false;
-let feedItems = [];
-let checking = false;
-let probeTimer = null;
-let probeTimeout = null;
-let probeResolve = null;
-let probeQueueIndex = 0;
-const songTitle = document.getElementById('songTitle');
-const songStatus = document.getElementById('songStatus');
-const previousButton = document.getElementById('previousButton');
-const nextButton = document.getElementById('nextButton');
 
-function extractVideoId(item) {
-  const sources = [item.guid, item.link, item.url].filter(Boolean).join(' ');
-  const idMatch = sources.match(/(?:video:|[?&]v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/i);
-  return idMatch ? idMatch[1] : '';
-}
-function looksLikeShort(item) {
-  const link = String(item.link || item.url || '');
-  const title = String(item.title || '');
-  const desc = String(item.description || item.content || '');
-  return /youtube\.com\/shorts\//i.test(link) || /(^|\s)#shorts?(?=\s|$|[.,!?])/i.test(title + ' ' + desc);
-}
-async function fetchFeed() {
-  const errors = [];
-  try {
-    const r = await fetch(RSS2JSON_URL + '&_=' + Date.now(), {cache:'no-store'});
-    if (!r.ok) throw new Error('RSS2JSON HTTP ' + r.status);
-    const data = await r.json();
-    if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error(data.message || 'Unexpected RSS response');
-    return data.items;
-  } catch (e) { errors.push(e.message); }
-  try {
-    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(RSS_URL + '&_=' + Date.now());
-    const r = await fetch(proxy, {cache:'no-store'});
-    if (!r.ok) throw new Error('RSS fallback HTTP ' + r.status);
-    const xmlText = await r.text();
-    const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
-    if (xml.querySelector('parsererror')) throw new Error('Invalid RSS XML');
-    return Array.from(xml.querySelectorAll('entry')).map(entry => ({
-      title: entry.querySelector('title')?.textContent || 'rmLv upload',
-      guid: entry.querySelector('id')?.textContent || '',
-      link: entry.querySelector('link[ rel="alternate" ]')?.getAttribute('href') || entry.querySelector('link')?.getAttribute('href') || '',
-      description: entry.querySelector('media\:description, description')?.textContent || ''
-    }));
-  } catch (e) { errors.push(e.message); }
-  throw new Error(errors.join(' | '));
-}
-function onYouTubeIframeAPIReady() {
-  youtubeAPIReady = true;
-  probePlayer = new YT.Player('durationProbe', {
-    width: 200, height: 120, videoId: '',
-    playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1 },
-    events: { onReady: () => { if (feedItems.length) checkCandidates(); }, onStateChange: onProbeStateChange, onError: onProbeError }
-  });
-  if (feedItems.length) checkCandidates();
-}
-function onProbeStateChange(event) {
-  if (event.data === YT.PlayerState.CUED || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.BUFFERING) {
-    readProbeDuration();
-  }
-}
-function onProbeError() { finishProbe(0); }
-function readProbeDuration() {
-  if (!probePlayer || !probeResolve) return;
-  const duration = Number(probePlayer.getDuration());
-  if (Number.isFinite(duration) && duration > 0) finishProbe(duration);
-}
-function finishProbe(duration) {
-  if (!probeResolve) return;
-  clearInterval(probeTimer); clearTimeout(probeTimeout);
-  const resolve = probeResolve; probeResolve = null;
-  resolve(duration);
-}
-function getVideoDuration(id) {
-  return new Promise(resolve => {
-    if (!probePlayer || !youtubeAPIReady) { resolve(0); return; }
-    clearInterval(probeTimer); clearTimeout(probeTimeout);
-    probeResolve = resolve;
-    try {
-      probePlayer.cueVideoById(id);
-      probeTimer = setInterval(readProbeDuration, 300);
-      probeTimeout = setTimeout(() => finishProbe(0), 7000);
-    } catch (_) { finishProbe(0); }
-  });
-}
-async function checkCandidates() {
-  if (checking || !youtubeAPIReady || !probePlayer || typeof probePlayer.cueVideoById !== 'function') return;
-  checking = true;
-  songStatus.textContent = 'Loading uploads from the Videos tab';
-  const candidates = feedItems.slice(0, MAX_CANDIDATES_TO_CHECK).map(item => ({
-    id: extractVideoId(item), title: item.title || 'rmLv upload', link: item.link || '', short: looksLikeShort(item)
-  })).filter(item => item.id && !item.short);
-  for (const item of candidates) {
-    const duration = await getVideoDuration(item.id);
-    if (duration > MIN_LONGFORM_SECONDS) songs.push({...item, duration});
-  }
-  checking = false;
-  if (!songs.length) {
-    songTitle.textContent = 'No long-form uploads found';
-    songStatus.textContent = 'Could not verify eligible videos. Refresh and try again.';
-    updateButtons();
-    return;
-  }
-  currentSongIndex = 0;
-  displaySong(0, false);
-}
-function createMainPlayer(videoId, autoplay) {
-  if (!videoId) return;
-  if (mainPlayer && typeof mainPlayer.loadVideoById === 'function') {
-    if (autoplay) mainPlayer.loadVideoById(videoId); else mainPlayer.cueVideoById(videoId);
-    return;
-  }
-  mainPlayer = new YT.Player('youtubePlayer', {
-    videoId,
-    playerVars: { autoplay: autoplay ? 1 : 0, rel: 0, playsinline: 1 },
-    events: { onStateChange: event => { if (event.data === YT.PlayerState.ENDED) showNextSong(); } }
-  });
-}
-function displaySong(index, autoplay=false) {
-  if (!songs[index]) return;
-  currentSongIndex = index;
-  const song = songs[index];
-  createMainPlayer(song.id, autoplay);
-  songTitle.textContent = song.title;
-  songStatus.textContent = `Long-form upload • ${Math.floor(song.duration / 60)}:${String(Math.floor(song.duration % 60)).padStart(2,'0')} • ${index + 1} of ${songs.length}`;
-  updateButtons();
-}
-function updateButtons() {
-  previousButton.disabled = currentSongIndex <= 0;
-  nextButton.disabled = currentSongIndex >= songs.length - 1;
-}
-function showNextSong() { if (currentSongIndex < songs.length - 1) displaySong(currentSongIndex + 1, true); }
-function showPreviousSong() { if (currentSongIndex > 0) displaySong(currentSongIndex - 1, true); }
-async function startUploadLoading() {
-  try {
-    songTitle.textContent = 'Loading rmLv uploads...';
-    feedItems = await fetchFeed();
-    if (!feedItems.length) throw new Error('The channel feed has no items.');
-    if (youtubeAPIReady) checkCandidates();
-    else songStatus.textContent = 'Waiting for Videos-tab uploads';
-  } catch (error) {
-    console.error('rmLv upload feed error:', error);
-    songTitle.textContent = 'Unable to load rmLv uploads';
-    songStatus.textContent = 'Feed request failed. Check connection and refresh.';
-    previousButton.disabled = true; nextButton.disabled = true;
-  }
-}
-startUploadLoading();
-</script>
 
 </body>
 </html>

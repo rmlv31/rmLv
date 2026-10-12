@@ -274,6 +274,8 @@ section {
 .song-info { text-align: center; padding: 18px 10px 5px; }
 .song-title { font-size: 17px; font-weight: 800; margin-bottom: 7px; }
 .song-status { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1.5; }
+/* Hide the status text above the Previous/Next buttons. */
+.song-status { display: none; }
 .player-controls { display: flex; justify-content: center; gap: 12px; margin-top: 18px; }
 .control-btn { border: 1px solid #333; background: #181818; color: white; border-radius: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: .25s ease; }
 .control-btn:hover:not(:disabled) { background: #292929; border-color: #555; transform: translateY(-2px); }

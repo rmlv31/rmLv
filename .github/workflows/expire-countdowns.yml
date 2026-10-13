@@ -1,0 +1,67 @@
+name: Automatically remove expired rmLv countdowns
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: expire-rmlv-countdowns
+  cancel-in-progress: false
+
+jobs:
+  remove-expired:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Remove countdowns whose release time has passed
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'upcoming.json';
+          if (!fs.existsSync(path)) {
+            console.log('No upcoming.json found; nothing to do.');
+            process.exit(0);
+          }
+          const raw = fs.readFileSync(path, 'utf8').trim();
+          if (!raw) {
+            console.log('upcoming.json is empty; nothing to do.');
+            process.exit(0);
+          }
+          const parsed = JSON.parse(raw);
+          const wasArray = Array.isArray(parsed);
+          const items = wasArray ? parsed : (parsed && parsed.title ? [parsed] : []);
+          const now = Date.now();
+          const expired = item => {
+            if (!item || !item.releaseDate) return false;
+            const time = /^\d{2}:\d{2}$/.test(item.releaseTime || '') ? item.releaseTime : '00:00';
+            const target = new Date(`${item.releaseDate}T${time}:00+08:00`).getTime();
+            return Number.isFinite(target) && target <= now;
+          };
+          const remaining = items.filter(item => !expired(item));
+          const removed = items.length - remaining.length;
+          if (!removed) {
+            console.log('No expired countdowns found.');
+            process.exit(0);
+          }
+          fs.writeFileSync(path, JSON.stringify(wasArray ? remaining : (remaining[0] || {}), null, 2) + '\n');
+          console.log(`Removed ${removed} expired countdown(s).`);
+          NODE
+
+      - name: Commit the updated countdown list
+        run: |
+          if git diff --quiet -- upcoming.json; then
+            echo "No expired countdown changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add upcoming.json
+          git commit -m "Automatically remove expired release countdowns"
+          git push

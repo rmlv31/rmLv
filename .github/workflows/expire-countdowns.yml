@@ -1,4 +1,4 @@
-name: Automatically remove expired rmLv countdowns
+name: Automatically publish expired rmLv releases
 
 on:
   schedule:
@@ -13,55 +13,107 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  remove-expired:
+  publish-expired:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Remove countdowns whose release time has passed
+      - name: Move expired countdowns into releases.json
         shell: bash
         run: |
           node <<'NODE'
           const fs = require('fs');
-          const path = 'upcoming.json';
-          if (!fs.existsSync(path)) {
-            console.log('No upcoming.json found; nothing to do.');
-            process.exit(0);
+
+          const upcomingPath = 'upcoming.json';
+          const releasesPath = 'releases.json';
+
+          function readJson(path, fallback) {
+            if (!fs.existsSync(path)) return fallback;
+            const raw = fs.readFileSync(path, 'utf8').trim();
+            return raw ? JSON.parse(raw) : fallback;
           }
-          const raw = fs.readFileSync(path, 'utf8').trim();
-          if (!raw) {
-            console.log('upcoming.json is empty; nothing to do.');
-            process.exit(0);
+          function asArray(value) {
+            if (Array.isArray(value)) return value;
+            if (value && typeof value === 'object' && value.title) return [value];
+            return [];
           }
-          const parsed = JSON.parse(raw);
-          const wasArray = Array.isArray(parsed);
-          const items = wasArray ? parsed : (parsed && parsed.title ? [parsed] : []);
+
+          const upcomingParsed = readJson(upcomingPath, []);
+          const upcomingWasArray = Array.isArray(upcomingParsed);
+          const upcoming = asArray(upcomingParsed);
+          const releases = asArray(readJson(releasesPath, []));
+
           const now = Date.now();
-          const expired = item => {
-            if (!item || !item.releaseDate) return false;
-            const time = /^\d{2}:\d{2}$/.test(item.releaseTime || '') ? item.releaseTime : '00:00';
-            const target = new Date(`${item.releaseDate}T${time}:00+08:00`).getTime();
-            return Number.isFinite(target) && target <= now;
-          };
-          const remaining = items.filter(item => !expired(item));
-          const removed = items.length - remaining.length;
-          if (!removed) {
-            console.log('No expired countdowns found.');
+          function releaseInstant(item) {
+            if (!item || !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(item.releaseDate || ''))) return NaN;
+            const time = /^\\d{2}:\\d{2}$/.test(String(item.releaseTime || ''))
+              ? item.releaseTime
+              : '00:00';
+            // rmLv release times are Philippine time (UTC+08:00).
+            return Date.parse(`${item.releaseDate}T${time}:00+08:00`);
+          }
+
+          const expired = upcoming.filter(item => {
+            const instant = releaseInstant(item);
+            return Number.isFinite(instant) && instant <= now;
+          });
+
+          console.log(`Upcoming entries: ${upcoming.length}`);
+          console.log(`Expired entries: ${expired.length}`);
+          if (!expired.length) {
+            console.log('No expired countdowns. No files changed.');
             process.exit(0);
           }
-          fs.writeFileSync(path, JSON.stringify(wasArray ? remaining : (remaining[0] || {}), null, 2) + '\n');
-          console.log(`Removed ${removed} expired countdown(s).`);
+
+          // Prevent duplicates by title + release date, while preserving all fields/links.
+          const signature = item =>
+            `${String(item.title || '').trim().toLowerCase()}|${String(item.releaseDate || '').trim()}`;
+          const known = new Set(releases.map(signature));
+          let added = 0;
+
+          for (const item of expired) {
+            const completeRelease = { ...item };
+            // Remove countdown-only metadata, but retain all song/platform fields.
+            delete completeRelease.id;
+            delete completeRelease.subtitle;
+            delete completeRelease.timezone;
+
+            const key = signature(completeRelease);
+            if (!known.has(key)) {
+              releases.push(completeRelease);
+              known.add(key);
+              added++;
+              console.log(`Added release: ${completeRelease.title || '(untitled)'}`);
+            } else {
+              console.log(`Already in releases.json; will only clean countdown: ${completeRelease.title || '(untitled)'}`);
+            }
+          }
+
+          const expiredSet = new Set(expired);
+          const remaining = upcoming.filter(item => !expiredSet.has(item));
+
+          // Always write releases first, so a failure cannot delete the upcoming entry first.
+          fs.writeFileSync(releasesPath, JSON.stringify(releases, null, 2) + '\\n');
+          fs.writeFileSync(
+            upcomingPath,
+            JSON.stringify(upcomingWasArray ? remaining : (remaining[0] || {}), null, 2) + '\\n'
+          );
+
+          console.log(`New releases added: ${added}`);
+          console.log(`Expired countdowns removed: ${expired.length}`);
+          console.log(`Upcoming entries remaining: ${remaining.length}`);
           NODE
 
-      - name: Commit the updated countdown list
+      - name: Commit updated release files
+        shell: bash
         run: |
-          if git diff --quiet -- upcoming.json; then
-            echo "No expired countdown changes to commit."
+          if git diff --quiet -- upcoming.json releases.json; then
+            echo "No expired release changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add upcoming.json
-          git commit -m "Automatically remove expired release countdowns"
+          git add upcoming.json releases.json
+          git commit -m "Automatically publish expired rmLv releases"
           git push

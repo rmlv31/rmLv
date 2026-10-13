@@ -46,11 +46,11 @@ jobs:
 
           const now = Date.now();
           function releaseInstant(item) {
-            if (!item || !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(item.releaseDate || ''))) return NaN;
-            const time = /^\\d{2}:\\d{2}$/.test(String(item.releaseTime || ''))
+            if (!item || !/^\d{4}-\d{2}-\d{2}$/.test(String(item.releaseDate || ''))) return NaN;
+            const time = /^\d{2}:\d{2}$/.test(String(item.releaseTime || ''))
               ? item.releaseTime
               : '00:00';
-            // rmLv release times are Philippine time (UTC+08:00).
+            // Release time is Philippine time (UTC+08:00).
             return Date.parse(`${item.releaseDate}T${time}:00+08:00`);
           }
 
@@ -66,7 +66,6 @@ jobs:
             process.exit(0);
           }
 
-          // Prevent duplicates by title + release date, while preserving all fields/links.
           const signature = item =>
             `${String(item.title || '').trim().toLowerCase()}|${String(item.releaseDate || '').trim()}`;
           const known = new Set(releases.map(signature));
@@ -74,7 +73,6 @@ jobs:
 
           for (const item of expired) {
             const completeRelease = { ...item };
-            // Remove countdown-only metadata, but retain all song/platform fields.
             delete completeRelease.id;
             delete completeRelease.subtitle;
             delete completeRelease.timezone;
@@ -86,18 +84,18 @@ jobs:
               added++;
               console.log(`Added release: ${completeRelease.title || '(untitled)'}`);
             } else {
-              console.log(`Already in releases.json; will only clean countdown: ${completeRelease.title || '(untitled)'}`);
+              console.log(`Already in releases.json; removing duplicate countdown: ${completeRelease.title || '(untitled)'}`);
             }
           }
 
           const expiredSet = new Set(expired);
           const remaining = upcoming.filter(item => !expiredSet.has(item));
 
-          // Always write releases first, so a failure cannot delete the upcoming entry first.
-          fs.writeFileSync(releasesPath, JSON.stringify(releases, null, 2) + '\\n');
+          // Save releases first; only then remove the countdown entry.
+          fs.writeFileSync(releasesPath, JSON.stringify(releases, null, 2) + '\n');
           fs.writeFileSync(
             upcomingPath,
-            JSON.stringify(upcomingWasArray ? remaining : (remaining[0] || {}), null, 2) + '\\n'
+            JSON.stringify(upcomingWasArray ? remaining : (remaining[0] || {}), null, 2) + '\n'
           );
 
           console.log(`New releases added: ${added}`);

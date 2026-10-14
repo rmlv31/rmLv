@@ -71,20 +71,25 @@ function loadUpcomingRelease(){
       for(const item of saved){if(!(await confirmedReleased(item)))stillPending.push(item)}
       saved=stillPending;
       const expiredNow=[];
+      const alreadyReleasedExpired=new Set();
       for(const item of valid){
-        if(item._target.getTime()<=now && !(await confirmedReleased(item)))expiredNow.push(item);
+        if(item._target.getTime()<=now){
+          if(await confirmedReleased(item))alreadyReleasedExpired.add(releaseIdentity(item));
+          else expiredNow.push(item);
+        }
       }
       for(const item of expiredNow){
         const key=releaseIdentity(item);
         if(!saved.some(existing=>releaseIdentity(existing)===key))saved.push(item);
       }
       saveExpired(saved);
-      const combined=[...valid];
+      const combined=valid.filter(item=>!alreadyReleasedExpired.has(releaseIdentity(item)));
       for(const item of saved){if(!combined.some(existing=>releaseIdentity(existing)===releaseIdentity(item)))combined.push({...item,_target:new Date(item.releaseDate+'T'+(item.releaseTime||'00:00')+':00+08:00')})}
       combined.sort((a,b)=>a._target-b._target);
       const pendingExpired=combined.filter(x=>x._target.getTime()<=now);
       const upcoming=combined.filter(x=>x._target.getTime()>now);
-      const shown=[...upcoming,...pendingExpired];
+      // Expired-but-not-yet-released cards always stay above future countdowns, including after reload.
+      const shown=[...pendingExpired,...upcoming];
       if(!shown.length){container.replaceChildren();return;}
       container.replaceChildren();
 

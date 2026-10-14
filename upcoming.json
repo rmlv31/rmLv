@@ -19,5 +19,26 @@
     "boomplay": "https://www.boomplay.com/artists/EQJwvxPNWCltFmt3jnCtSGBI?from=search",
     "subtitle": "Since 2010...",
     "timezone": "Asia/Manila"
+  },
+  {
+    "id": "upcoming-mv7ezl3e-vczdzp9",
+    "title": "test2",
+    "artist": "rmLv",
+    "releaseDate": "2026-10-29",
+    "releaseTime": "23:00",
+    "type": "bbbb",
+    "genre": "awww",
+    "description": "qweqwe",
+    "cover": "",
+    "youtube": "",
+    "spotify": "",
+    "appleMusic": "",
+    "youtubeMusic": "",
+    "bandcamp": "",
+    "tidal": "",
+    "deezer": "",
+    "boomplay": "",
+    "subtitle": "eett",
+    "timezone": "Asia/Manila"
   }
 ]

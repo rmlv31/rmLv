@@ -16,23 +16,5 @@
     "tidal": "https://tidal.com/album/552769742",
     "deezer": "https://www.deezer.com/en/album/1055367212",
     "boomplay": "https://www.boomplay.com/artists/EQJwvxPNWCltFmt3jnCtSGBI?from=search"
-  },
-  {
-    "title": "test1",
-    "artist": "rmLv",
-    "releaseDate": "2026-10-14",
-    "releaseTime": "15:11",
-    "type": "aaaaaaaaaaaa",
-    "genre": "aaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-    "cover": "https://raw.githubusercontent.com/rmlv31/rmLv/main/covers/test1-1791961061361.png",
-    "youtube": "https://youtu.be/qlwZVjoUzak",
-    "spotify": "",
-    "appleMusic": "",
-    "youtubeMusic": "",
-    "bandcamp": "",
-    "tidal": "",
-    "deezer": "",
-    "boomplay": ""
   }
 ]

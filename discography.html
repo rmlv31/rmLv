@@ -46,11 +46,16 @@ function formatDate(value){if(!value)return 'Not specified';const d=new Date(val
 function renderReleases(items){const list=document.getElementById('releaseList');list.replaceChildren();if(!Array.isArray(items)||!items.length){list.innerHTML='<div class="state-box"><strong>No releases yet</strong><p>Add your songs to releases.json and they will appear here.</p></div>';return}items.sort((a,b)=>(b.releaseDate||'').localeCompare(a.releaseDate||''));for(const item of items){const card=document.createElement('article');card.className='release-card';const coverWrap=document.createElement('div');coverWrap.className='cover-wrap';const coverLink=document.createElement('a');coverLink.className='cover-link';const youtube=safeUrl(item.youtube);if(youtube){coverLink.href=youtube;coverLink.target='_blank';coverLink.rel='noopener noreferrer';coverLink.setAttribute('aria-label','Watch '+(item.title||'rmLv release')+' on YouTube')}else{coverLink.href=safeUrl(item.cover)||'#'}const img=document.createElement('img');img.className='cover';img.alt=(item.title||'rmLv release')+' cover art';img.loading='lazy';img.src=safeUrl(item.cover)||'';const videoId=getYouTubeId(item.youtube);if(!safeUrl(item.cover)&&videoId)img.src='https://img.youtube.com/vi/'+videoId+'/maxresdefault.jpg';img.onerror=()=>{if(videoId&&img.dataset.fallback!=='hq'){img.dataset.fallback='hq';img.src='https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg'}else{img.onerror=null;img.style.visibility='hidden'}};coverLink.appendChild(img);coverWrap.appendChild(coverLink);const note=document.createElement('p');note.className='cover-note';note.textContent='Release artwork';coverWrap.appendChild(note);
 const info=document.createElement('div');info.className='release-info';const labels=document.createElement('div');labels.className='release-labels';if(item.type){const type=document.createElement('span');type.className='pill'+(/^single$/i.test(item.type)?' single':'');type.textContent=item.type;labels.appendChild(type)}const title=document.createElement('h3');title.textContent=item.title||'Untitled release';const artist=document.createElement('p');artist.className='artist';artist.textContent='by '+(item.artist||'rmLv');const metadata=document.createElement('div');metadata.className='metadata';const dateItem=document.createElement('div');dateItem.className='metadata-item';dateItem.innerHTML='<span class="label">Release date</span>';const dateValue=document.createElement('span');dateValue.className='value';dateValue.textContent=formatDate(item.releaseDate);dateItem.appendChild(dateValue);const genreItem=document.createElement('div');genreItem.className='metadata-item';genreItem.innerHTML='<span class="label">Genre / style</span>';const genreValue=document.createElement('span');genreValue.className='value';genreValue.textContent=item.genre||'rmLv release';genreItem.appendChild(genreValue);metadata.append(dateItem,genreItem);const subheading=document.createElement('h4');subheading.className='subheading';subheading.textContent='Listen to the song';const links=document.createElement('div');links.className='platforms';for(const key of order){const href=safeUrl(item[key]);if(!href)continue;const a=document.createElement('a');a.className='platform-link'+(key==='youtube'?' primary':'');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=platformNames[key]||key;links.appendChild(a)}info.append(labels,title,artist,metadata,subheading,links);card.append(coverWrap,info);list.appendChild(card)}}
 fetch('./releases.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Could not load releases.json');return r.json()}).then(renderReleases).catch(()=>{document.getElementById('releaseList').innerHTML='<div class="state-box error"><strong>The release list could not be loaded</strong><p>Make sure <code>releases.json</code> is uploaded beside this page and contains valid JSON.</p></div>'});
+const OUT_NOW_STORAGE_KEY='rmlv-expired-countdowns-v1';
+function readSavedExpired(){try{const value=JSON.parse(localStorage.getItem(OUT_NOW_STORAGE_KEY)||'[]');return Array.isArray(value)?value:[]}catch{return []}}
+function saveExpired(items){try{localStorage.setItem(OUT_NOW_STORAGE_KEY,JSON.stringify(items))}catch(error){console.warn('Could not save expired countdowns locally:',error)}}
+function releaseIdentity(item){return String(item&&item.title||'').trim().toLowerCase()+'|'+String(item&&item.releaseDate||'').trim()}
+async function confirmedReleased(item){try{const response=await fetch('./releases.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return false;const json=await response.json();const items=Array.isArray(json)?json:(json&&typeof json==='object'?[json]:[]);return items.some(entry=>releaseIdentity(entry)===releaseIdentity(item))}catch{return false}}
 function loadUpcomingRelease(){
   const container=document.getElementById('upcomingReleases');
   fetch('./upcoming.json',{cache:'no-store'})
     .then(r=>{if(!r.ok)throw new Error('No upcoming release');return r.json()})
-    .then(data=>{
+    .then(async data=>{
       const entries=Array.isArray(data)?data:(data&&typeof data==='object'?[data]:[]);
       const now=Date.now();
       const valid=entries
@@ -59,11 +64,28 @@ function loadUpcomingRelease(){
         .filter(x=>!Number.isNaN(x._target.getTime()))
         .sort((a,b)=>a._target-b._target);
 
-      if(!valid.length){container.replaceChildren();return;}
-
-      // Show every upcoming entry; if all dates have passed, show the most recent as OUT NOW.
-      const upcoming=valid.filter(x=>x._target.getTime()>now);
-      const shown=upcoming.length?upcoming:[valid[valid.length-1]];
+      // Keep expired cards locally across reloads if the workflow temporarily removes
+      // them from upcoming.json before their transfer to releases.json is visible.
+      let saved=readSavedExpired();
+      const stillPending=[];
+      for(const item of saved){if(!(await confirmedReleased(item)))stillPending.push(item)}
+      saved=stillPending;
+      const expiredNow=[];
+      for(const item of valid){
+        if(item._target.getTime()<=now && !(await confirmedReleased(item)))expiredNow.push(item);
+      }
+      for(const item of expiredNow){
+        const key=releaseIdentity(item);
+        if(!saved.some(existing=>releaseIdentity(existing)===key))saved.push(item);
+      }
+      saveExpired(saved);
+      const combined=[...valid];
+      for(const item of saved){if(!combined.some(existing=>releaseIdentity(existing)===releaseIdentity(item)))combined.push({...item,_target:new Date(item.releaseDate+'T'+(item.releaseTime||'00:00')+':00+08:00')})}
+      combined.sort((a,b)=>a._target-b._target);
+      const pendingExpired=combined.filter(x=>x._target.getTime()<=now);
+      const upcoming=combined.filter(x=>x._target.getTime()>now);
+      const shown=[...upcoming,...pendingExpired];
+      if(!shown.length){container.replaceChildren();return;}
       container.replaceChildren();
 
       shown.forEach((release,index)=>{
@@ -112,11 +134,14 @@ function loadUpcomingRelease(){
                     readEntries('releases.json'),readEntries('upcoming.json')
                   ]);
                   const isReleased=releasedEntries.some(matchesRelease);
-                  const stillUpcoming=upcomingEntries.some(matchesRelease);
-                  if(isReleased&&!stillUpcoming){
-                    grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">RELEASE PUBLISHED</span><span class="countdown-label">REFRESHING DISCOGRAPHY…</span></div>';
-                    window.location.reload();
-                    return;
+                  if(isReleased){
+                    const remaining=readSavedExpired().filter(item=>!matchesRelease(item));
+                    saveExpired(remaining);
+                    if(!upcomingEntries.some(matchesRelease)){
+                      grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">RELEASE PUBLISHED</span><span class="countdown-label">REFRESHING DISCOGRAPHY…</span></div>';
+                      window.location.reload();
+                      return;
+                    }
                   }
                 }catch(error){console.warn('Waiting for release workflow:',error);}
                 window.setTimeout(verifyTransfer,5000);

@@ -91,7 +91,7 @@ function loadUpcomingRelease(){
         const tick=()=>{
           const left=release._target.getTime()-Date.now();
           if(left<=0){
-            grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">OUT NOW</span><span class="countdown-label">UPDATING RELEASES… PAGE REFRESHING SHORTLY</span></div>';
+            grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">OUT NOW</span><span class="countdown-label">A LITTLE MOMENT…</span><span style="display:block;margin-top:10px;color:var(--muted);font-size:.9rem;letter-spacing:normal;font-weight:500">Your song is finding its way home. 🦋</span></div>';
             if(timer)clearInterval(timer);
             // Wait for GitHub Actions to finish before refreshing. Poll both JSON files
             // until this exact title/date exists in releases.json and is gone from upcoming.json.
@@ -119,9 +119,9 @@ function loadUpcomingRelease(){
                     return;
                   }
                 }catch(error){console.warn('Waiting for release workflow:',error);}
-                window.setTimeout(verifyTransfer,15000);
+                window.setTimeout(verifyTransfer,5000);
               };
-              window.setTimeout(verifyTransfer,15000);
+              window.setTimeout(verifyTransfer,5000);
             }
             return;
           }

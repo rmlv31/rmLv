@@ -19,5 +19,26 @@
     "boomplay": "https://www.boomplay.com/artists/EQJwvxPNWCltFmt3jnCtSGBI?from=search",
     "subtitle": "Since 2010...",
     "timezone": "Asia/Manila"
+  },
+  {
+    "id": "upcoming-mv7j7uus-e25wj36",
+    "title": "test1",
+    "artist": "rmLv",
+    "releaseDate": "2026-10-14",
+    "releaseTime": "11:31",
+    "type": "abc",
+    "genre": "def",
+    "description": "Unfortunately, the RNG gods weren't on my side today—no luck this time around, but the grind doesn't stop. We're still clearing out the remaining objectives in the Cloud Mist Forest before we even think about touching the Shifting Sands.",
+    "cover": "https://raw.githubusercontent.com/rmlv31/rmLv/main/covers/test1-1791947396230.png",
+    "youtube": "https://youtu.be/feQKKcYw0ks",
+    "spotify": "",
+    "appleMusic": "",
+    "youtubeMusic": "",
+    "bandcamp": "",
+    "tidal": "",
+    "deezer": "",
+    "boomplay": "",
+    "subtitle": "ghhi",
+    "timezone": "Asia/Manila"
   }
 ]

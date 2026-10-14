@@ -19,5 +19,26 @@
     "boomplay": "https://www.boomplay.com/artists/EQJwvxPNWCltFmt3jnCtSGBI?from=search",
     "subtitle": "Since 2010...",
     "timezone": "Asia/Manila"
+  },
+  {
+    "id": "upcoming-mv7klym3-rhx8a9m",
+    "title": "123",
+    "artist": "rmLv",
+    "releaseDate": "2026-10-14",
+    "releaseTime": "11:53",
+    "type": "Single",
+    "genre": "Emotional EDM / Love Song",
+    "description": "In this episode, I head out to mine phosphate ore needed for bone powder fertilizer.\nThis will help improve my farm and boost production for future resources.",
+    "cover": "https://raw.githubusercontent.com/rmlv31/rmLv/main/covers/123-1791949733104.png",
+    "youtube": "https://youtu.be/8Wwnohp8KKM",
+    "spotify": "",
+    "appleMusic": "",
+    "youtubeMusic": "",
+    "bandcamp": "",
+    "tidal": "",
+    "deezer": "",
+    "boomplay": "",
+    "subtitle": "A new feeling is coming...",
+    "timezone": "Asia/Manila"
   }
 ]

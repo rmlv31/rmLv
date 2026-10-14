@@ -19,5 +19,26 @@
     "boomplay": "https://www.boomplay.com/artists/EQJwvxPNWCltFmt3jnCtSGBI?from=search",
     "subtitle": "Since 2010...",
     "timezone": "Asia/Manila"
+  },
+  {
+    "id": "upcoming-mv7r2324-kh67mlb",
+    "title": "test1",
+    "artist": "rmLv",
+    "releaseDate": "2026-10-14",
+    "releaseTime": "14:55",
+    "type": "test1 type",
+    "genre": "test1 genre",
+    "description": "After a long break due to storage issues, I’m finally back with a full progress tour.\nIn this episode, I showcase the ropeways from my base to the Flint Tribe for easy access,\nclear out the area for loot, and reveal my 3 stone tablets for remodeling my tribesmen.",
+    "cover": "https://raw.githubusercontent.com/rmlv31/rmLv/main/covers/test1-1791960550850.png",
+    "youtube": "https://youtu.be/qlwZVjoUzak",
+    "spotify": "",
+    "appleMusic": "",
+    "youtubeMusic": "",
+    "bandcamp": "",
+    "tidal": "",
+    "deezer": "",
+    "boomplay": "",
+    "subtitle": "test1 message",
+    "timezone": "Asia/Manila"
   }
 ]

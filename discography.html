@@ -36,7 +36,7 @@
       </section>
     </div>
   </main>
-  <footer><div class="container"><p>Made with feelings by <a href="index.html">rmLv</a></p><p>Love, memories, and music — one song at a time.</p><nav class="social-links" aria-label="Follow rmLv on social media"><a href="https://www.youtube.com/@rmLv.31" target="_blank" rel="noopener noreferrer">YouTube Channel</a><a href="https://www.tiktok.com/@rmlv.31" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.facebook.com/rmLvL31/" target="_blank" rel="noopener noreferrer">Facebook</a><a href="https://www.instagram.com/rmlv.31/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/rmLv31" target="_blank" rel="noopener noreferrer">X</a><a href="https://ph.pinterest.com/rmlv31/" target="_blank" rel="noopener noreferrer">Pinterest</a></nav></div></footer>
+  <footer><div class="container"><p>Made with feeling by <a href="index.html">rmLv</a></p><p>Love, memories, and music — one song at a time.</p><nav class="social-links" aria-label="Follow rmLv on social media"><a href="https://www.youtube.com/@rmLv.31" target="_blank" rel="noopener noreferrer">YouTube Channel</a><a href="https://www.tiktok.com/@rmlv.31" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.facebook.com/rmLvL31/" target="_blank" rel="noopener noreferrer">Facebook</a><a href="https://www.instagram.com/rmlv.31/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/rmLv31" target="_blank" rel="noopener noreferrer">X</a><a href="https://ph.pinterest.com/rmlv31/" target="_blank" rel="noopener noreferrer">Pinterest</a></nav></div></footer>
 <script>
 const platformNames={youtube:'▶ YouTube Video',spotify:'Spotify',appleMusic:'Apple Music',youtubeMusic:'YouTube Music',tidal:'TIDAL',deezer:'Deezer',bandcamp:'Bandcamp Artist Page',boomplay:'Boomplay Artist Page'};
 const order=['youtube','spotify','appleMusic','youtubeMusic','tidal','deezer','bandcamp','boomplay'];
@@ -91,8 +91,38 @@ function loadUpcomingRelease(){
         const tick=()=>{
           const left=release._target.getTime()-Date.now();
           if(left<=0){
-            grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">OUT NOW</span><span class="countdown-label">LISTEN TO THE NEW RELEASE</span></div>';
+            grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">OUT NOW</span><span class="countdown-label">UPDATING RELEASES… PAGE REFRESHING SHORTLY</span></div>';
             if(timer)clearInterval(timer);
+            // Wait for GitHub Actions to finish before refreshing. Poll both JSON files
+            // until this exact title/date exists in releases.json and is gone from upcoming.json.
+            if(!card.dataset.transferCheckStarted){
+              card.dataset.transferCheckStarted='true';
+              const normalizeTitle=value=>String(value||'').trim().toLowerCase();
+              const matchesRelease=item=>normalizeTitle(item&&item.title)===normalizeTitle(release.title)
+                &&String(item&&item.releaseDate||'').trim()===String(release.releaseDate||'').trim();
+              const readEntries=async path=>{
+                const response=await fetch('./'+path+'?check='+Date.now(),{cache:'no-store'});
+                if(!response.ok)throw new Error('Could not check '+path);
+                const json=await response.json();
+                return Array.isArray(json)?json:(json&&typeof json==='object'?[json]:[]);
+              };
+              const verifyTransfer=async()=>{
+                try{
+                  const [releasedEntries,upcomingEntries]=await Promise.all([
+                    readEntries('releases.json'),readEntries('upcoming.json')
+                  ]);
+                  const isReleased=releasedEntries.some(matchesRelease);
+                  const stillUpcoming=upcomingEntries.some(matchesRelease);
+                  if(isReleased&&!stillUpcoming){
+                    grid.innerHTML='<div class="countdown-unit" style="grid-column:1/-1"><span class="countdown-number">RELEASE PUBLISHED</span><span class="countdown-label">REFRESHING DISCOGRAPHY…</span></div>';
+                    window.location.reload();
+                    return;
+                  }
+                }catch(error){console.warn('Waiting for release workflow:',error);}
+                window.setTimeout(verifyTransfer,15000);
+              };
+              window.setTimeout(verifyTransfer,15000);
+            }
             return;
           }
           const vals=[Math.floor(left/86400000),Math.floor(left/3600000)%24,Math.floor(left/60000)%60,Math.floor(left/1000)%60];

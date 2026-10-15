@@ -36,7 +36,7 @@
       </section>
     </div>
   </main>
-  <footer><div class="container"><p>Since 2010 - <a href="index.html">rmLv</a></p><p>Love, memories, and music — one song at a time.</p><nav class="social-links" aria-label="Follow rmLv on social media"><a href="https://www.youtube.com/@rmLv.31" target="_blank" rel="noopener noreferrer">YouTube Channel</a><a href="https://www.tiktok.com/@rmlv.31" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.facebook.com/rmLvL31/" target="_blank" rel="noopener noreferrer">Facebook</a><a href="https://www.instagram.com/rmlv.31/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/rmLv31" target="_blank" rel="noopener noreferrer">X</a><a href="https://ph.pinterest.com/rmlv31/" target="_blank" rel="noopener noreferrer">Pinterest</a></nav></div></footer>
+  <footer><div class="container"><p>Made with feeling by <a href="index.html">rmLv</a></p><p>Love, memories, and music — one song at a time.</p><nav class="social-links" aria-label="Follow rmLv on social media"><a href="https://www.youtube.com/@rmLv.31" target="_blank" rel="noopener noreferrer">YouTube Channel</a><a href="https://www.tiktok.com/@rmlv.31" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.facebook.com/rmLvL31/" target="_blank" rel="noopener noreferrer">Facebook</a><a href="https://www.instagram.com/rmlv.31/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/rmLv31" target="_blank" rel="noopener noreferrer">X</a><a href="https://ph.pinterest.com/rmlv31/" target="_blank" rel="noopener noreferrer">Pinterest</a></nav></div></footer>
 <script>
 const platformNames={youtube:'▶ YouTube Video',spotify:'Spotify',appleMusic:'Apple Music',youtubeMusic:'YouTube Music',tidal:'TIDAL',deezer:'Deezer',bandcamp:'Bandcamp Artist Page',boomplay:'Boomplay Artist Page'};
 const order=['youtube','spotify','appleMusic','youtubeMusic','tidal','deezer','bandcamp','boomplay'];
@@ -166,7 +166,7 @@ function loadUpcomingRelease(){
             number.textContent=String(v).padStart(2,'0');
             const label=document.createElement('span');
             label.className='countdown-label';
-            label.textContent=labels[i][v===1?0:1];
+            label.textContent=labels[i][v<=1?0:1];
             unit.append(number,label);
             grid.appendChild(unit);
           });

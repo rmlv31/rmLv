@@ -156,7 +156,7 @@ function loadUpcomingRelease(){
             return;
           }
           const vals=[Math.floor(left/86400000),Math.floor(left/3600000)%24,Math.floor(left/60000)%60,Math.floor(left/1000)%60];
-          const labels=['DAYS','HOURS','MINS','SECS'];
+          const labels=[['DAY','DAYS'],['HOUR','HOURS'],['MIN','MINS'],['SEC','SECS']];
           grid.replaceChildren();
           vals.forEach((v,i)=>{
             const unit=document.createElement('div');
@@ -166,7 +166,7 @@ function loadUpcomingRelease(){
             number.textContent=String(v).padStart(2,'0');
             const label=document.createElement('span');
             label.className='countdown-label';
-            label.textContent=labels[i];
+            label.textContent=labels[i][v===1?0:1];
             unit.append(number,label);
             grid.appendChild(unit);
           });

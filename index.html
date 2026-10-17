@@ -305,6 +305,12 @@ section {
     width: 100%;
 }
 
+/* Keep the remaining social buttons centered after removing X. */
+.social-links-grid {
+    grid-template-columns: repeat(auto-fit, 220px);
+    justify-content: center;
+}
+
 
 /* =========================
    CARD
@@ -493,6 +499,11 @@ footer {
         margin: 0 auto;
     }
 
+    .social-links-grid {
+        grid-template-columns: repeat(2, minmax(0, 220px));
+        justify-content: center;
+    }
+
     .card {
         width: 100%;
     }
@@ -664,7 +675,7 @@ footer {
 </div>
 
 
-<div class="links-grid">
+<div class="links-grid social-links-grid">
 
 
 <!-- YouTube -->
@@ -814,36 +825,6 @@ fill="white"/>
 
 </a>
 
-
-<!-- X -->
-
-<a
-class="card"
-href="https://x.com/rmLv31"
-target="_blank"
-rel="noopener">
-
-<div class="icon">
-
-<svg viewBox="0 0 24 24">
-
-<path
-fill="white"
-d="M18.244 2.25h3.308l-7.227 8.26L22.83 21.75h-6.618l-5.19-6.793-5.935 6.793H1.777l7.73-8.835L1.17 2.25H7.956l4.69 6.204 5.598-6.204zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
-
-</svg>
-
-</div>
-
-<div class="name">
-    X
-</div>
-
-<div class="url-status">
-    Follow
-</div>
-
-</a>
 
 </div>
 

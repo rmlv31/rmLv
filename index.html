@@ -1243,15 +1243,22 @@ function getTrueSongTitle(fullTitle) {
 
 function updateCurrentVideo() {
   if (!playerReady || !mainPlayer || typeof mainPlayer.getVideoData !== 'function') return;
+
   const data = mainPlayer.getVideoData();
+  const index = typeof mainPlayer.getPlaylistIndex === 'function' ? mainPlayer.getPlaylistIndex() : -1;
+  const playlist = typeof mainPlayer.getPlaylist === 'function' ? mainPlayer.getPlaylist() : null;
+
   if (data && data.title) {
     const trueTitle = getTrueSongTitle(data.title);
     songTitle.textContent = trueTitle;
     const heading = document.getElementById('latestReleaseHeading');
-    if (heading) heading.textContent = `LATEST RELEASE | \"${trueTitle}\"`;
+    if (heading) {
+      // The first item is the newest upload; later playlist items are past uploads.
+      const label = index === 0 ? 'LATEST RELEASE' : 'PREVIOUS RELEASE';
+      heading.textContent = `${label} | "${trueTitle}"`;
+    }
   }
-  const index = typeof mainPlayer.getPlaylistIndex === 'function' ? mainPlayer.getPlaylistIndex() : -1;
-  const playlist = typeof mainPlayer.getPlaylist === 'function' ? mainPlayer.getPlaylist() : null;
+
   songStatus.textContent = (index >= 0 && playlist && playlist.length)
     ? `YouTube Videos tab • ${index + 1} of ${playlist.length}`
     : 'YouTube Videos-tab playlist';

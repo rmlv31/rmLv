@@ -61,5 +61,26 @@
     "boomplay": "https://www.boomplay.com/songs/EQu9mDdnHVMVV93BLmMqFnnw?from=search",
     "subtitle": "For the way it all went wrong...",
     "timezone": "Asia/Manila"
+  },
+  {
+    "id": "upcoming-mvxvupkb-xw66z7i",
+    "title": "Moonlit Verdict",
+    "artist": "rmLv",
+    "releaseDate": "2026-11-27",
+    "releaseTime": "21:12",
+    "type": "Single",
+    "genre": "Emotional EDM",
+    "description": "“Moonlit Verdict” tells the story of an unexpected reunion on an important day, when seeing someone from the past made every other plan suddenly feel unimportant. Caught between an opportunity and feelings he never expressed, one silent moment became a memory he couldn't let go.",
+    "cover": "https://raw.githubusercontent.com/rmlv31/rmLv/main/covers/moonlit-verdict-1793540705749.png",
+    "youtube": "https://youtu.be/nEhuVF2PCGE",
+    "spotify": "",
+    "appleMusic": "",
+    "youtubeMusic": "",
+    "bandcamp": "",
+    "tidal": "",
+    "deezer": "",
+    "boomplay": "",
+    "subtitle": "Pag-Ibig...",
+    "timezone": "Asia/Manila"
   }
 ]

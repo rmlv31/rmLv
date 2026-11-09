@@ -8,12 +8,17 @@
     .rmlv-heart-host { position: relative !important; overflow: visible !important; }
     .rmlv-hover-heart {
       position: absolute; z-index: 9999; pointer-events: none; user-select: none;
-      color: #050505; font-family: Arial, sans-serif; font-size: var(--heart-size, 15px);
-      line-height: 1; font-weight: 900; text-shadow: 0 1px 2px rgba(255,255,255,.22);
+      color: #222; background: linear-gradient(135deg, #050505 0%, #343434 42%, #a6a6a6 72%, #171717 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: Arial, sans-serif; font-size: var(--heart-size, 15px);
+      line-height: 1; font-weight: 900; filter: drop-shadow(0 1px 1px rgba(255,255,255,.2));
       transform: translate(-50%, 0) scale(.55); opacity: 0;
       animation: rmlvHeartFloat var(--heart-duration, 1050ms) ease-out forwards;
     }
-    .rmlv-hover-heart.is-red { color: #ef233c; text-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .rmlv-hover-heart.is-red {
+      background: none; color: #ef233c; -webkit-text-fill-color: #ef233c;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+    }
     @keyframes rmlvHeartFloat {
       0% { opacity: 0; transform: translate(-50%, 2px) scale(.45) rotate(-12deg); }
       14% { opacity: 1; transform: translate(-50%, -5px) scale(1.08) rotate(8deg); }
@@ -25,7 +30,7 @@
   `;
   document.head.appendChild(style);
 
-  const selector = 'button, [role="button"], a.btn, a.button, .btn a, .button a';
+  const selector = 'a[href], area[href], button, [role="button"], [role="link"], input[type="button"], input[type="submit"], input[type="reset"], summary, [onclick]';
   let active = null;
 
   function spawnHeart(el) {
